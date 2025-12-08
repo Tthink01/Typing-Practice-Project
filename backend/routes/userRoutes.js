@@ -1,7 +1,7 @@
 // server/routes/userRoutes.js
 const express = require('express');
 const router = express.Router();
-const userController = require('../controllers/userController.js'); // เรียกใช้ Controller ที่ทำตะกี้
+const userController = require('../Controllers/UserController.js'); // เรียกใช้ Controller ที่ทำตะกี้
 
 // กำหนดเส้นทาง
 router.get('/users', userController.getAllUsers);
