@@ -40,6 +40,7 @@ const LoginPage = () => {
           // --- ✅ 1. บันทึกข้อมูล User ลง Local Storage (สำคัญมาก!) ---
           // ถ้าไม่มีบรรทัดนี้ หน้า Admin จะไม่รู้ว่าใครล็อกอินเข้ามา
           localStorage.setItem("currentUser", JSON.stringify(data.user));
+          window.dispatchEvent(new Event("auth-change"));
 
           const name = data.user ? data.user.username : "";
           alert(`ยินดีต้อนรับ! ${name}`);
