@@ -1,5 +1,5 @@
 # --- Dependencies (สำคัญมาก ห้ามลืม!) ---
-node_modules
+node_modules/
 
 # --- Environment Variables (ความปลอดภัย) ---
 .env
