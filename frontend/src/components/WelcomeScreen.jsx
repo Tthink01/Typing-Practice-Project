@@ -1,58 +1,165 @@
-import React from 'react';
-import { Keyboard, ArrowRight } from 'lucide-react'; // อย่าลืม npm install lucide-react
+import React, { useState, useEffect, useRef } from "react";
+import { Keyboard, ArrowRight } from "lucide-react";
 
-// Component นี้รับ prop ชื่อ onStart (ฟังก์ชันที่จะทำงานเมื่อกดปุ่มเริ่ม)
+// --- Helper Data & Functions ---
+const CHAR_SET =
+  "กขฃคฅฆงจฉชซฌญฎฏฐฑฒณดตถทธนบปผฝพฟภมยรลวศษสหฬอฮabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+
+// ย้ายฟังก์ชันสุ่มตำแหน่งออกมาข้างนอก เพื่อให้เรียกใช้ได้ทุกที่
+const getRandomPos = () => ({
+  top: Math.floor(Math.random() * 80) + 10 + "%",
+  left: Math.floor(Math.random() * 90) + 5 + "%",
+});
+
+// 1. ตัวอักษรลอยไปมา (FloatingChar)
+const FloatingChar = ({ className }) => {
+  // ✅ แก้ไข: สุ่มค่าตั้งแต่ประกาศตัวแปรเลย (ไม่ต้องรอ useEffect)
+  const [char, setChar] = useState(
+    () => CHAR_SET[Math.floor(Math.random() * CHAR_SET.length)]
+  );
+  const [isVisible, setIsVisible] = useState(false);
+  const [position, setPosition] = useState(() => getRandomPos());
+  const [opacity, setOpacity] = useState(() => 0.05 + Math.random() * 0.15);
+
+  const timeoutRef = useRef(null);
+
+  useEffect(() => {
+    // ใน useEffect เหลือแค่ "จังหวะการเล่น" (Loop) เท่านั้น ไม่มีการ Set ค่าเริ่มต้นแล้ว
+    const runCycle = () => {
+      setIsVisible(true);
+      const stayDuration = 8000 + Math.random() * 7000;
+
+      timeoutRef.current = setTimeout(() => {
+        setIsVisible(false); // สั่งซ่อน
+
+        // รอให้จางหายไปก่อน (3วิ) ค่อยสุ่มค่าใหม่สำหรับรอบหน้า
+        timeoutRef.current = setTimeout(() => {
+          setChar(CHAR_SET[Math.floor(Math.random() * CHAR_SET.length)]);
+          setPosition(getRandomPos());
+          setOpacity(0.05 + Math.random() * 0.15);
+          runCycle(); // วนลูป
+        }, 3000);
+      }, stayDuration);
+    };
+
+    const initialDelay = Math.random() * 5000;
+    timeoutRef.current = setTimeout(runCycle, initialDelay);
+
+    return () => clearTimeout(timeoutRef.current);
+  }, []);
+
+  return (
+    <div
+      className={`${className} absolute select-none pointer-events-none transition-opacity duration-[3000ms]`}
+      style={{
+        opacity: isVisible ? opacity : 0,
+        top: position.top,
+        left: position.left,
+        transitionProperty: "opacity",
+      }}
+    >
+      {char}
+    </div>
+  );
+};
+
+// 2. ชื่อหัวข้อ (FloatingTitle)
+const FloatingTitle = () => {
+  const text = "E & T Touch Typing";
+  const words = text.split(" ");
+  return (
+    <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold mb-2 -mt-6 flex flex-nowrap justify-center gap-x-3 md:gap-x-6 leading-normal select-none whitespace-nowrap">
+      {words.map((word, wIndex) => (
+        <div key={wIndex} className="flex">
+          {word.split("").map((char, cIndex) => {
+            const delay = (wIndex * 3 + cIndex) * 0.25;
+            return (
+              <span
+                key={cIndex}
+                className="inline-block pb-4"
+                style={{
+                  animation: `float-letter 5s cubic-bezier(0.4, 0, 0.2, 1) infinite`,
+                  animationDelay: `${delay}s`,
+                }}
+              >
+                <span className="text-shine-effect filter drop-shadow-[0_0_15px_rgba(234,179,8,0.6)]">
+                  {char}
+                </span>
+              </span>
+            );
+          })}
+        </div>
+      ))}
+    </h1>
+  );
+};
+
+// --- Main Component: WelcomeScreen ---
 const WelcomeScreen = ({ onStart }) => {
   return (
-    // Container หลัก: เต็มจอ (fixed inset-0), สีดำเข้ม (bg-stone-950), จัดกึ่งกลาง (flex center)
-    <div className="fixed inset-0 z-[100] bg-stone-950 flex flex-col items-center justify-center text-center overflow-hidden font-sans">
-      
-      {/* --- ส่วน Background Decor (แสงพื้นหลัง) --- */}
-      {/* ใช้ Tailwind: absolute, blur, animate-pulse เพื่อให้แสงวิบวับ */}
+    <div className="fixed inset-0 z-[100] bg-stone-950 flex flex-col items-center justify-center text-center overflow-hidden animate-fade-in font-sans">
+      {/* Background Decor */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-orange-600/10 rounded-full blur-[120px] animate-pulse pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-yellow-600/10 rounded-full blur-[120px] animate-pulse pointer-events-none" />
-      
-      {/* --- ส่วน Floating Elements (ตัวอักษรลอยๆ) --- */}
-      {/* ใช้ animate-float ที่เราตั้งค่าไว้ใน config */}
-      <div className="absolute top-20 left-20 text-stone-700 text-6xl font-black opacity-20 animate-float">ก</div>
-      <div className="absolute bottom-32 right-20 text-stone-700 text-6xl font-black opacity-20 animate-float-slow">A</div>
-      <div className="absolute top-40 right-1/3 text-stone-700 text-4xl font-black opacity-10 animate-float">5</div>
-      
-      {/* --- ส่วนเนื้อหาหลัก (Content) --- */}
-      <div className="relative z-10 flex flex-col items-center gap-8 max-w-2xl px-6 animate-fade-in-up">
-        
-        {/* Logo Icon */}
+
+      {/* Floating Characters Background */}
+      <FloatingChar className="text-stone-600 text-8xl font-black animate-float" />
+      <FloatingChar className="text-stone-500 text-5xl font-bold animate-float-slow" />
+      <FloatingChar className="text-stone-600 text-9xl font-black animate-float-reverse" />
+      <FloatingChar className="text-stone-700 text-4xl font-bold animate-float" />
+      <FloatingChar className="text-stone-600 text-7xl font-black animate-float-slow" />
+      <FloatingChar className="text-stone-500 text-3xl font-bold animate-float-reverse" />
+      <FloatingChar className="text-stone-600 text-6xl font-black animate-float" />
+      <FloatingChar className="text-stone-500 text-5xl font-bold animate-float-slow" />
+      <FloatingChar className="text-stone-600 text-4xl font-black animate-float-reverse" />
+      <FloatingChar className="text-stone-500 text-7xl font-bold animate-float" />
+      <FloatingChar className="text-stone-600 text-3xl font-black animate-float-slow" />
+      <FloatingChar className="text-stone-700 text-5xl font-bold animate-float-reverse" />
+
+      {/* Main Content */}
+      <div className="relative z-10 flex flex-col items-center gap-8 max-w-2xl px-6 animate-fade-in-up -translate-y-8">
+        {/* Logo */}
         <div className="w-24 h-24 bg-gradient-to-br from-orange-500 to-yellow-500 rounded-3xl shadow-2xl shadow-orange-500/20 flex items-center justify-center mb-4 transform hover:scale-105 transition-transform duration-500">
-           <Keyboard className="text-white w-12 h-12" />
+          <Keyboard className="text-white w-12 h-12" />
         </div>
 
-        {/* หัวข้อ (Text Gradient & Shine) */}
+        {/* Title & Description */}
         <div>
-          <h1 className="text-5xl md:text-7xl font-extrabold mb-6 pb-2 text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-yellow-200 to-orange-500 animate-text-shine bg-[length:200%_auto]">
-            E & T Touch Typing
-          </h1>
+          <FloatingTitle />
           <p className="text-stone-400 text-xl md:text-2xl font-light tracking-wide mt-4">
-            ฝึกฝนทักษะการพิมพ์สัมผัสของคุณให้ <span className="text-orange-400 font-bold">เร็ว</span> และ <span className="text-lime-400 font-bold">แม่นยำ</span>
+            ฝึกฝนทักษะการพิมพ์สัมผัสของคุณให้{" "}
+            <span className="text-orange-400 font-bold">เร็ว</span> และ{" "}
+            <span className="text-lime-400 font-bold">แม่นยำ</span>
           </p>
         </div>
 
-        {/* เส้นขีดคั่น */}
-        <div className="w-24 h-1 bg-gradient-to-r from-transparent via-stone-700 to-transparent my-2"></div>
-
-        {/* ปุ่มเริ่ม (Start Button) */}
-        <button 
+        {/* Start Button */}
+        <button
           onClick={onStart}
-          className="group relative px-12 py-5 bg-stone-900 border border-orange-500/30 rounded-full font-bold text-xl text-white shadow-2xl hover:scale-105 transition-all duration-300 overflow-hidden cursor-pointer"
+          className="group relative px-14 py-5 rounded-full font-bold text-xl text-stone-900 shadow-[0_0_20px_rgba(132,204,22,0.6)] hover:shadow-[0_0_30px_rgba(234,179,8,0.8)] hover:scale-105 transition-all duration-300 overflow-hidden cursor-pointer"
         >
-          {/* เอฟเฟกต์แสงวิ่งผ่านปุ่ม (Shimmer) */}
-          <div className="absolute top-0 -left-full w-1/2 h-full skew-x-[-25deg] bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shine-sweep" />
-          
-          <span className="relative flex items-center gap-3">
-              เข้าสู่เว็บไซต์ <ArrowRight className="group-hover:translate-x-1 transition-transform" />
+          <div className="absolute inset-0 bg-gradient-to-r from-lime-400 via-yellow-400 to-amber-400" />
+
+          <div
+            className="absolute top-0 -left-1/4 w-[150%] h-full bg-gradient-to-r from-transparent via-white/60 to-transparent"
+            style={{
+              transform: "skewX(-25deg)",
+              animation: "shine-sweep 5s infinite ease-in-out",
+            }}
+          />
+
+          <span className="relative flex items-center gap-3 z-10 font-medium">
+            เข้าสู่หน้าฝึกพิมพ์{" "}
+            <ArrowRight
+              className="group-hover:translate-x-1 transition-transform"
+              strokeWidth={2.5}
+            />
           </span>
         </button>
-        
-        <p className="text-stone-600 text-sm mt-8">พัฒนาทักษะการพิมพ์ ไทย-อังกฤษ แบบมืออาชีพ</p>
+
+        <p className="text-stone-500 text-lg font-medium mt-8">
+          พัฒนาทักษะการพิมพ์ ไทย & อังกฤษ
+        </p>
       </div>
     </div>
   );
