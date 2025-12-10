@@ -5,6 +5,8 @@ const cors = require("cors");
 
 const userRoutes = require("./routes/userRoutes");
 
+require('dotenv').config();
+
 const app = express();
 app.use(express.json());
 app.use(cors());
@@ -12,9 +14,7 @@ app.use(cors());
 // --- เชื่อมต่อ MongoDB ---
 // *สำคัญ: เปลี่ยนตรงนี้เป็น Connection String ของคุณ (จาก MongoDB Atlas หรือ Local)*
 mongoose
-  .connect(
-    "mongodb+srv://boothmuen1234_db_user:DNumlycNNbcp6I9j@project-cluster.m69obkd.mongodb.net/typing-game"
-  )
+  .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ Connected to MongoDB Atlas")) // ถ้าติด ให้บอกว่าติด
   .catch((err) => console.error("❌ DB Error:", err)); // ถ้าพัง ให้บอก Error
 
