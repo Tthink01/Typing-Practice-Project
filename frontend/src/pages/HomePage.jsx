@@ -1,8 +1,10 @@
-import React from 'react';
+import React, {useState} from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import ModeCard from '../components/ModeCard';
 import { GAME_MODES } from '../data/gameMode.js'; // เรียกใช้ข้อมูล
+import WelcomeScreen from '../components/WelcomeScreen';
+
 
 // ส่วนหัวข้อ (Hero Section)
 const HeroSection = () => (
@@ -19,11 +21,17 @@ const HeroSection = () => (
 // หน้าหลัก (HomePage)
 const HomePage = () => {
   const navigate = useNavigate();
+  const [showWelcome, setShowWelcome] = useState(true);
 
   return (
+    
+    
     // Background Wrapper
     <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col relative overflow-hidden font-sans">
       {/* Glow Effect */}
+      {showWelcome && (
+        <WelcomeScreen onStart={() => setShowWelcome(false)} />
+      )}
       <div className="absolute top-[-10%] left-1/2 transform -translate-x-1/2 w-[800px] h-[500px] bg-orange-900/20 rounded-full blur-[120px] pointer-events-none" />
 
       <Navbar />
