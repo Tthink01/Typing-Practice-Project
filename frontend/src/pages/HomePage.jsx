@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import ModeCard from '../components/ModeCard';
 import { GAME_MODES } from '../data/gameMode.js'; // เรียกใช้ข้อมูล
-import WelcomeScreen from '../components/WelcomeScreen';
-
+import WelcomeScreen from './WelcomePage.jsx';
 
 // ส่วนหัวข้อ (Hero Section)
 const HeroSection = () => (
