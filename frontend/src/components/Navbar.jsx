@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react"; // ลบ useEffect ออกได้เลยถ้าไม่ได้ใช้ทำอย่างอื่น
 import { Link, useNavigate } from "react-router-dom";
-import { FaUser, FaSignOutAlt } from "react-icons/fa";
-import { AiFillHome, AiOutlineTrophy } from "react-icons/ai";
+import { House, GraduationCap, Type, User, LogOut } from "lucide-react"; // ใช้ lucide-react ตามโปรเจกต์ใหม่
 
 const Navbar = () => {
   const navigate = useNavigate();
+  
 
   // ✅ แก้ไขจุดที่ 1: อ่านค่าจาก LocalStorage ทันทีที่เริ่มทำงาน (ไม่ต้องรอ useEffect)
   const [user, setUser] = useState(() => {
@@ -46,17 +46,26 @@ const Navbar = () => {
       </div>
 
       {/* เมนูตรงกลาง */}
-      <div className="bg-[#1f1f1f] rounded-full px-6 py-2 flex gap-6 border border-gray-700">
-        <Link to="/">
-          <AiFillHome className="text-orange-500 cursor-pointer" size={20} />
+      <div className="absolute left-1/2 transform -translate-x-1/2 bg-[#1a1a1a]/80 backdrop-blur-md border border-gray-800 rounded-full px-8 py-3 flex items-center gap-8 shadow-xl">
+        
+        {/* ปุ่ม 1: หน้าหลัก */}
+        <Link to="/" title="หน้าหลัก">
+          <House className={("/")} size={24} />
         </Link>
-        <AiOutlineTrophy
-          className="text-gray-500 hover:text-white cursor-pointer"
-          size={20}
-        />
-        <span className="text-gray-500 hover:text-white cursor-pointer font-serif">
-          T
-        </span>
+
+        {/* ปุ่ม 2: ฝึกซ้อม (Basic/Pro) */}
+        {/* สมมติว่าหน้ารวมคอร์สคือ /practice หรือถ้าไม่มีก็ลิงก์ไป /practice/basic ก็ได้ */}
+        <Link to="/practice/basic" title="โหมดฝึกซ้อม">
+          <GraduationCap className={("/practice/basic")} size={24} />
+        </Link>
+
+        {/* ปุ่ม 3: Sandbox */}
+        {/* ถ้า Sandbox เป็นแค่ State ในหน้า Home อาจต้องใช้ onClick แทน Link */}
+        {/* แต่ถ้าแยก Route ก็ใช้ Link ได้เลย (ในที่นี้ใส่ไว้เพื่อความสวยงามก่อน) */}
+        <div className={("/sandbox")} title="โหมดพิมพ์อิสระ">
+          <Type size={24} />
+        </div>
+
       </div>
 
       {/* ส่วนด้านขวา */}
@@ -77,13 +86,13 @@ const Navbar = () => {
               className="bg-red-500/10 hover:bg-red-600 text-red-500 hover:text-white p-2 rounded-full transition-all"
               title="ออกจากระบบ"
             >
-              <FaSignOutAlt size={14} />
+              <LogOut size={14} />
             </button>
           </div>
         ) : (
           <Link to="/login">
             <button className="flex items-center gap-2 bg-[#1f1f1f] hover:bg-[#2a2a2a] text-gray-300 px-4 py-2 rounded-full border border-gray-700 text-sm transition-all cursor-pointer">
-              <FaUser size={12} />
+              <User size={12} />
               ลงชื่อเข้าใช้ / สมัคร
             </button>
           </Link>
