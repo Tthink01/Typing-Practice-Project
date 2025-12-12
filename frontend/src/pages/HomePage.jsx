@@ -103,6 +103,7 @@ const HomePage = () => {
                  level={mode.level}
                  description={mode.description}
                  isLocked={mode.isLocked}
+                 helpText="ใส่ข้อความแนะนำที่คุณต้องการตรงนี้..." // เพิ่มบรรทัดนี้
                />
             </div>
           ))}

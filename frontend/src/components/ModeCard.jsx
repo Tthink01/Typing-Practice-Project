@@ -1,72 +1,67 @@
-import React from 'react';
-import { FaKeyboard, FaLock } from 'react-icons/fa';
-import { BsQuestionCircle } from 'react-icons/bs';
+import React, { useState } from 'react';
+import { Keyboard, HelpCircle, Lock, ArrowRight } from 'lucide-react';
 
-const ModeCard = ({ title, level, description, isLocked, onClick, onHelpClick }) => {
+const ModeCard = ({ title, level, description, isLocked, helpText }) => { // รับ helpText เพิ่ม
+  // 1. เพิ่ม State เช็คว่าเมาส์ชี้อยู่ไหม
+  const [isHovered, setIsHovered] = useState(false);
+
+  // ข้อความแนะนำ (ถ้าไม่ได้ส่งมา ให้ใช้ค่า Default)
+  const defaultHelpText = "โหมดนี้เหมาะสำหรับผู้เริ่มต้น ฝึกพิมพ์แป้นเหย้า แถวบน แถวล่าง และการผสมคำง่ายๆ เพื่อสร้างความคุ้นเคยกับแป้นพิมพ์";
+  const contentText = helpText || defaultHelpText;
+
   return (
-    <div
-      className="relative bg-[#1a1a1a] border border-gray-800 rounded-2xl p-6 w-full max-w-sm 
-                 hover:border-orange-500/50 transition-all duration-300 group cursor-pointer"
-      onClick={isLocked ? undefined : onClick}
-    >
-      {/* ไอคอนเครื่องหมายคำถาม */}
-      <div
-        className="absolute top-4 right-4 text-gray-500 hover:text-yellow-400 cursor-pointer"
-        onClick={(e) => {
-          e.stopPropagation();  // ❗ ป้องกันคลิกช่วยแล้วมันเปิด modal เลือกด่านแทน
-          onHelpClick && onHelpClick();
-        }}
+    <div className={`relative w-[380px] h-[480px] bg-[#0f0f0f] border ${isLocked ? 'border-stone-800 opacity-80' : 'border-stone-800 hover:border-stone-600'} rounded-[2rem] p-8 flex flex-col justify-between overflow-hidden transition-all duration-300 group`}>
+      
+      {/* 2. ส่วน Popup ข้อความแนะนำ (จะโชว์เมื่อ isHovered เป็น true) */}
+      <div 
+        className={`absolute inset-0 bg-[#0f0f0f]/95 backdrop-blur-sm z-20 flex flex-col items-center justify-center p-8 text-center transition-opacity duration-300 ${isHovered ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
       >
-        <BsQuestionCircle size={20} />
+        <HelpCircle size={48} className="text-lime-400 mb-4 drop-shadow-[0_0_10px_rgba(132,204,22,0.5)]" />
+        <h3 className="text-lime-400 font-bold text-xl mb-4">คำแนะนำ</h3>
+        <p className="text-stone-300 leading-relaxed font-light">
+          {contentText}
+        </p>
       </div>
 
-      {/* ไอคอนคีย์บอร์ด */}
-      <div
-        className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 
-        ${isLocked
-          ? 'bg-gray-800 text-gray-500'
-          : 'bg-gray-800 text-green-400 border border-green-500/30'
-        }`}
-      >
-        <FaKeyboard size={24} />
+      {/* --- เนื้อหาการ์ดปกติ --- */}
+      <div>
+        {/* Header Icon & Help Button */}
+        <div className="flex justify-between items-start mb-6">
+          <div className={`p-3 rounded-2xl bg-stone-900 border border-stone-800 ${isLocked ? 'text-yellow-500' : 'text-lime-400'}`}>
+            <Keyboard size={32} />
+          </div>
+          
+          {/* ปุ่ม Help (?) */}
+          <div 
+            className="text-stone-500 hover:text-lime-400 cursor-help transition-colors"
+            onMouseEnter={() => setIsHovered(true)}  // เมาส์เข้า -> เปิด
+            onMouseLeave={() => setIsHovered(false)} // เมาส์ออก -> ปิด
+          >
+            <HelpCircle size={28} />
+          </div>
+        </div>
+
+        {/* Text Content */}
+        <h2 className="text-3xl font-bold text-white mb-2">{title}</h2>
+        <span className="text-xs font-bold text-stone-500 tracking-widest uppercase">{level}</span>
+        <p className="mt-6 text-stone-400 leading-relaxed text-sm h-20 overflow-hidden">
+          {description}
+        </p>
       </div>
 
-      {/* หัวข้อ */}
-      <h3 className={`text-2xl font-bold mb-1 ${isLocked ? 'text-gray-500' : 'text-white'}`}>
-        {title}
-      </h3>
-
-      <p className="text-xs text-gray-500 font-semibold tracking-wider mb-4">
-        {level}
-      </p>
-
-      {/* คำอธิบาย */}
-      <p className="text-gray-400 text-sm mb-8 min-h-[40px]">
-        {description}
-      </p>
-
-      {/* ปุ่ม */}
-      {isLocked ? (
-        <button
-          disabled
-          className="w-full py-3 rounded-lg border border-gray-700 text-yellow-600 
-                     flex items-center justify-center gap-2 bg-gray-900/50 cursor-not-allowed"
-        >
-          <FaLock size={14} />
-          <span className="text-sm font-medium">ยังไม่ปลดล็อค</span>
-        </button>
-      ) : (
-        <button
-          className="w-full py-3 rounded-lg bg-green-600 hover:bg-green-500 text-white font-bold 
-                     transition-colors shadow-lg shadow-green-900/20 flex items-center justify-center gap-2"
-          onClick={(e) => {
-            e.stopPropagation();   // ❗ ป้องกันซ้อนกับการคลิก card
-            onClick && onClick();
-          }}
-        >
-          เริ่มฝึกฝน <span>→</span>
-        </button>
-      )}
+      {/* Footer Button */}
+      <div className="mt-auto">
+        {isLocked ? (
+          <div className="w-full py-4 rounded-xl flex items-center justify-center text-amber-500 font-bold bg-stone-900 border border-stone-800">
+            <Lock size={18} className="mr-2" /> ยังไม่ปลดล็อค
+          </div>
+        ) : (
+          <div className="w-full py-4 px-6 rounded-xl flex items-center justify-between bg-gradient-to-r from-lime-600 to-lime-500 text-black font-bold shadow-lg shadow-lime-900/20 group-hover:scale-[1.02] transition-transform cursor-pointer">
+            <span>เริ่มฝึกฝน</span>
+            <ArrowRight size={20} />
+          </div>
+        )}
+      </div>
     </div>
   );
 };
