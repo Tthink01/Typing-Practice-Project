@@ -1,0 +1,30 @@
+export const EXERCISES_DATA = {
+  basic: {
+    TH: [
+      { id: 1, title: "ด่านที่ 1", sub: "แป้นเหย้า (Home Row)" },
+      { id: 2, title: "ด่านที่ 2", sub: "แถวบน (Top Row)" },
+      { id: 3, title: "ด่านที่ 3", sub: "แถวล่าง (Bottom Row)" },
+      { id: 4, title: "ด่านที่ 4", sub: "สลับแถว (Mixed Rows)" },
+      { id: 5, title: "ด่านที่ 5", sub: "ผสมคำง่าย (Simple Words)" }
+    ],
+    EN: [
+      { id: 1, title: "Level 1", sub: "Home Row" },
+      { id: 2, title: "Level 2", sub: "Top Row" },
+      { id: 3, title: "Level 3", sub: "Bottom Row" },
+      { id: 4, title: "Level 4", sub: "Mixed Rows" },
+      { id: 5, title: "Level 5", sub: "Simple Words" }
+    ]
+  },
+  pro: {
+    TH: [
+      { id: 1, title: "ด่านที่ 1", sub: "ประโยคสั้น" },
+      { id: 2, title: "ด่านที่ 2", sub: "บทความ" },
+      { id: 3, title: "ด่านที่ 3", sub: "โค้ดโปรแกรม" }
+    ],
+    EN: [
+      { id: 1, title: "Level 1", sub: "Sentences" },
+      { id: 2, title: "Level 2", sub: "Articles" },
+      { id: 3, title: "Level 3", sub: "Programming" }
+    ]
+  }
+};

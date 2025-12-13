@@ -1,71 +1,34 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+// --- Components ---
 import Navbar from '../components/Navbar';
 import ModeCard from '../components/ModeCard';
+import WelcomeScreen from './WelcomePage';
+import LevelSelectModal from '../components/LevelSelectModal';
+import HeroSection from '../components/Home/HeroSection'; // นำเข้า HeroSection ที่แยกไว้
+
+// --- Data ---
 import { GAME_MODES } from '../data/gameMode.js';
-import WelcomeScreen from './WelcomePage.jsx';
-import LevelSelectModal from '../components/LevelSelectModal'; // ✅ 1. นำเข้า Modal ที่สร้างไว้
-
-// ✅ 2. ข้อมูลด่าน (Mock Data)
-const EXERCISES_DATA = {
-  basic: {
-    TH: [
-      { id: 1, title: "ด่านที่ 1", sub: "แป้นเหย้า (Home Row)" },
-      { id: 2, title: "ด่านที่ 2", sub: "แถวบน (Top Row)" },
-      { id: 3, title: "ด่านที่ 3", sub: "แถวล่าง (Bottom Row)" },
-      { id: 4, title: "ด่านที่ 4", sub: "สลับแถว (Mixed Rows)" },
-      { id: 5, title: "ด่านที่ 5", sub: "ผสมคำง่าย (Simple Words)" }
-    ],
-    EN: [
-      { id: 1, title: "Level 1", sub: "Home Row" },
-      { id: 2, title: "Level 2", sub: "Top Row" },
-      { id: 3, title: "Level 3", sub: "Bottom Row" },
-      { id: 4, title: "Level 4", sub: "Mixed Rows" },
-      { id: 5, title: "Level 5", sub: "Simple Words" }
-    ]
-  },
-  pro: {
-    TH: [
-      { id: 1, title: "ด่านที่ 1", sub: "ประโยคสั้น" },
-      { id: 2, title: "ด่านที่ 2", sub: "บทความ" },
-      { id: 3, title: "ด่านที่ 3", sub: "โค้ดโปรแกรม" }
-    ],
-    EN: [
-      { id: 1, title: "Level 1", sub: "Sentences" },
-      { id: 2, title: "Level 2", sub: "Articles" },
-      { id: 3, title: "Level 3", sub: "Programming" }
-    ]
-  }
-};
-
-const HeroSection = () => (
-  <div className="text-center mb-16 z-10">
-    <h1 className="text-5xl md:text-6xl font-bold mb-4 tracking-wide">
-      ฝึกพิมพ์สัมผัส <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-200">E & T</span>
-    </h1>
-    <p className="text-gray-400 text-sm md:text-base max-w-xl mx-auto">
-      โหมดฝึกฝนเพื่อพัฒนาทักษะ หรือเลื่อนไปทางขวาเพื่อทดสอบความเร็ว
-    </p>
-  </div>
-);
+import { EXERCISES_DATA } from '../data/exercises.js'; // นำเข้าข้อมูลที่แยกไว้
 
 const HomePage = () => {
   const navigate = useNavigate();
+  
+  // --- States ---
   const [showWelcome, setShowWelcome] = useState(true);
-
-  // ✅ 3. State ควบคุม Modal
-  const [activeModal, setActiveModal] = useState(null); // 'basic' หรือ 'pro' หรือ null
+  const [activeModal, setActiveModal] = useState(null); // 'basic', 'pro', or null
   const [practiceLanguage, setPracticeLanguage] = useState('TH');
 
-  // ✅ 4. ฟังก์ชันปลดล็อค (ให้เล่นได้หมดไปก่อน)
-  const isLevelUnlocked = () => true; 
+  // --- Handlers ---
+  
+  // ฟังก์ชันปลดล็อคจำลอง
+  const isLevelUnlocked = () => true;
 
-  // ✅ 5. ฟังก์ชันเมื่อกดการ์ด (สำคัญ! เปลี่ยนจากการเปลี่ยนหน้า เป็นเปิด Modal)
+  // ฟังก์ชันกดการ์ด
   const handleCardClick = (mode) => {
     if (mode.isLocked) return;
 
-    // ถ้ากดการ์ดที่มี id เป็น 'basic' หรือ 'pro' ให้เปิด Modal
-    // ** ต้องไปเช็คในไฟล์ data/gameMode.js ว่า id ตั้งเป็นอะไร **
     if (mode.id === 'basic' || mode.id === 'pro') {
        setActiveModal(mode.id);
     } else {
@@ -73,51 +36,53 @@ const HomePage = () => {
     }
   };
 
+  // ฟังก์ชันเริ่มเกม (รับค่าจาก Modal)
   const handleLevelStart = (levelId) => {
-      console.log(`เริ่มเกมโหมด: ${activeModal} ด่านที่: ${levelId}`);
-      setActiveModal(null); // ปิด Modal ก่อน
-      // ในอนาคตค่อยใส่ navigate ไปหน้าเกมจริงๆ ตรงนี้
+      console.log(`Start Game: Mode ${activeModal}, Level ${levelId}`);
+      setActiveModal(null);
       // navigate(`/game/${activeModal}/${levelId}`);
   };
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col relative overflow-hidden font-sans">
-      {/* Glow Effect */}
-      {showWelcome && (
-        <WelcomeScreen onStart={() => setShowWelcome(false)} />
-      )}
+      
+      {/* Background & Effects */}
+      {showWelcome && <WelcomeScreen onStart={() => setShowWelcome(false)} />}
       <div className="absolute top-[-10%] left-1/2 transform -translate-x-1/2 w-[800px] h-[500px] bg-orange-900/20 rounded-full blur-[120px] pointer-events-none" />
 
+      {/* Navigation */}
       <Navbar />
 
+      {/* Main Content */}
       <main className="flex-1 flex flex-col items-center justify-center px-4 mt-10">
+        
+        {/* เรียกใช้ Component ที่แยกออกไป */}
         <HeroSection />
 
-        {/* Card Container */}
+        {/* Card Grid */}
         <div className="flex flex-col md:flex-row gap-6 md:gap-8 justify-center items-center w-full max-w-4xl z-10">
           {GAME_MODES.map((mode) => (
-            // ✅ 6. แก้ไข onClick ให้เรียก handleCardClick
             <div key={mode.id} onClick={() => handleCardClick(mode)}>
                <ModeCard 
                  title={mode.title}
                  level={mode.level}
                  description={mode.description}
                  isLocked={mode.isLocked}
-                 helpText="ใส่ข้อความแนะนำที่คุณต้องการตรงนี้..." // เพิ่มบรรทัดนี้
+                 helpText={mode.id === 'basic' ? "คำแนะนำสำหรับโหมดพื้นฐาน..." : "คำแนะนำสำหรับโหมด Pro..."} 
                />
             </div>
           ))}
         </div>
       </main>
 
-      {/* ปุ่มลูกศรขวา */}
+      {/* Right Arrow Button */}
       <div className="absolute right-4 top-1/2 transform -translate-y-1/2 hidden md:block">
          <button className="p-3 bg-[#1a1a1a] border border-gray-800 rounded-lg hover:border-orange-500 text-orange-500 transition-colors">
            ❯
          </button>
       </div>
 
-      {/* ✅ 7. เรียกใช้ Modal ไว้ท้ายสุด */}
+      {/* Modal System */}
       <LevelSelectModal 
           isOpen={!!activeModal} 
           onClose={() => setActiveModal(null)}
