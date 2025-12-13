@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import AdminPage from "./pages/AdminPage";
+import SandboxPage from "./pages/SandboxPage";
 // import GamePage from './pages/GamePage'; // (ถ้ามี)
 
 function App() {
@@ -13,11 +14,16 @@ function App() {
       <Routes>
         {/* หน้าหลัก */}
         <Route path="/" element={<HomePage />} />
+         {/* หน้าทดลองพิมพ์ */}
+        <Route path="/sandbox" element={<SandboxPage />} />
+
 
         {/* หน้า Login/Register */}
         <Route path="/login" element={<LoginPage />} />
 
         <Route path="/admin" element={<AdminPage />} />
+
+        <Route path="/Sandbox" element={<SandboxPage />} />
         
         
 
