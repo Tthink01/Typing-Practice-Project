@@ -6,11 +6,13 @@ import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import AdminPage from "./pages/AdminPage";
 import SandboxPage from "./pages/SandboxPage";
+import Navbar from "./components/Navbar";
 // import GamePage from './pages/GamePage'; // (ถ้ามี)
 
 function App() {
   return (
     <BrowserRouter>
+    <Navbar />
       <Routes>
         {/* หน้าหลัก */}
         <Route path="/" element={<HomePage />} />

@@ -1,81 +1,98 @@
-import React, { useState, useEffect } from "react"; // ลบ useEffect ออกได้เลยถ้าไม่ได้ใช้ทำอย่างอื่น
-import { Link, useNavigate } from "react-router-dom";
-import { House, GraduationCap, Type, User, LogOut } from "lucide-react"; // ใช้ lucide-react ตามโปรเจกต์ใหม่
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { House, GraduationCap, Type, User, LogOut } from "lucide-react";
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
+  // ฟังก์ชันเช็คว่าปุ่มไหนควร Active (เปลี่ยนสี)
   const isActive = (path) => location.pathname === path;
 
-  // ✅ แก้ไขจุดที่ 1: อ่านค่าจาก LocalStorage ทันทีที่เริ่มทำงาน (ไม่ต้องรอ useEffect)
+  // --- Auth Logic ---
   const [user, setUser] = useState(() => {
     const storedUser = localStorage.getItem("currentUser");
     return storedUser ? JSON.parse(storedUser) : null;
   });
 
-  // เพิ่มส่วนนี้: ดักฟังสัญญาณ 'auth-change' เพื่อเปลี่ยนปุ่มทันที
   useEffect(() => {
     const handleAuthChange = () => {
       const storedUser = localStorage.getItem("currentUser");
       setUser(storedUser ? JSON.parse(storedUser) : null);
     };
-
     window.addEventListener("auth-change", handleAuthChange);
-    return () => {
-      window.removeEventListener("auth-change", handleAuthChange);
-    };
+    return () => window.removeEventListener("auth-change", handleAuthChange);
   }, []);
 
   const handleLogout = () => {
     if (window.confirm("ต้องการออกจากระบบใช่หรือไม่?")) {
       localStorage.removeItem("currentUser");
-      window.dispatchEvent(new Event("auth-change")); // ส่งสัญญาณบอกตัวเอง
+      window.dispatchEvent(new Event("auth-change"));
       navigate("/login");
     }
   };
 
   return (
-    <nav className="flex justify-between items-center px-8 py-4 bg-transparent absolute top-0 w-full z-10">
-      {/* Logo ด้านซ้าย */}
-      <div className="flex items-center gap-2">
+    <nav className="fixed top-0 left-0 w-full flex justify-between items-center px-8 py-4 z-50 pointer-events-none">
+      {/* 1. Logo ด้านซ้าย (คลิกแล้วกลับ Home แบบ Reset) */}
+      <Link
+        to="/"
+        state={{ forceShowWelcome: true }}
+        className="flex items-center gap-2 pointer-events-auto"
+      >
         <div className="bg-orange-600 p-1 rounded-md text-white font-bold text-xs">
           ⌨
         </div>
         <span className="text-white font-semibold text-sm">
           E & T touch typing
         </span>
-      </div>
+      </Link>
 
-      {/* เมนูตรงกลาง */}
-      <div className="absolute left-1/2 transform -translate-x-1/2 bg-[#1a1a1a]/80 backdrop-blur-md border border-gray-800 rounded-full px-8 py-3 flex items-center gap-8 shadow-xl">
-        {/* ปุ่ม 1: หน้าหลัก */}
-        <Link to="/" title="หน้าหลัก">
-          <House className={"/"} size={24} />
+      {/* 2. เมนูตรงกลาง */}
+      <div className="absolute left-1/2 transform -translate-x-1/2 bg-[#1a1a1a]/90 backdrop-blur-md border border-gray-800 rounded-full px-8 py-3 flex items-center gap-8 shadow-xl pointer-events-auto">
+        {/* ปุ่ม Home -> ไปหน้า Welcome */}
+        <Link
+          to="/"
+          state={{ forceShowWelcome: true }}
+          title="หน้าต้อนรับ (Welcome)"
+        >
+          <House
+            size={24}
+            className={`cursor-pointer transition-all duration-300 hover:scale-110 ${
+              isActive("/") && !location.state?.forceShowContent
+                ? "text-orange-500 scale-125 drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]"
+                : "text-gray-500 hover:text-white"
+            }`}
+          />
         </Link>
 
-        {/* ปุ่ม 2: ฝึกซ้อม (Basic/Pro) */}
-        {/* สมมติว่าหน้ารวมคอร์สคือ /practice หรือถ้าไม่มีก็ลิงก์ไป /practice/basic ก็ได้ */}
-        <Link to="/practice/basic" title="โหมดฝึกซ้อม">
-          <GraduationCap className={"/practice/basic"} size={24} />
+        {/* ปุ่ม Hat -> ไปหน้าเลือกแบบฝึกหัด (ปิด Welcome) */}
+        <Link to="/" state={{ forceShowContent: true }} title="เลือกแบบฝึกหัด">
+          <GraduationCap
+            size={28}
+            className={`cursor-pointer transition-all duration-300 hover:scale-110 ${
+              isActive("/") && location.state?.forceShowContent
+                ? "text-lime-400 scale-125 drop-shadow-[0_0_8px_rgba(132,204,22,0.5)]"
+                : "text-gray-500 hover:text-white"
+            }`}
+          />
         </Link>
 
-        {/* ปุ่ม 3: Sandbox */}
-        {/* ถ้า Sandbox เป็นแค่ State ในหน้า Home อาจต้องใช้ onClick แทน Link */}
-        {/* แต่ถ้าแยก Route ก็ใช้ Link ได้เลย (ในที่นี้ใส่ไว้เพื่อความสวยงามก่อน) */}
-        <Link to="/sandbox" title="โหมดพิมพ์อิสระ (Sandbox)">
+        {/* ปุ่ม T -> ไปหน้า Sandbox */}
+        <Link to="/sandbox" title="โหมดพิมพ์อิสระ">
           <Type
             size={24}
-            className={`cursor-pointer transition-all duration-300 ${
+            className={`cursor-pointer transition-all duration-300 hover:scale-110 ${
               isActive("/sandbox")
-                ? "text-orange-500 scale-125 drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]" // ถ้าอยู่หน้า Sandbox: สีส้ม
-                : "text-gray-500 hover:text-white hover:scale-110" // ถ้าไม่ใช่: สีเทา
+                ? "text-blue-400 scale-125 drop-shadow-[0_0_8px_rgba(96,165,250,0.5)]"
+                : "text-gray-500 hover:text-white"
             }`}
           />
         </Link>
       </div>
 
-      {/* ส่วนด้านขวา */}
-      <div>
+      {/* 3. ส่วนด้านขวา (User Profile / Login) */}
+      <div className="pointer-events-auto">
         {user ? (
           <div className="flex items-center gap-3 bg-[#1f1f1f] px-2 py-1 rounded-full border border-gray-700">
             <div className="px-3 flex flex-col items-end leading-tight">
