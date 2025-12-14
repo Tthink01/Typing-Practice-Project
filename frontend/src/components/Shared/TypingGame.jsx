@@ -1,10 +1,8 @@
-import React, { useRef, useEffect, useMemo } from 'react'; // ✅ เพิ่ม useMemo
-import { ArrowDown, ArrowUp } from 'lucide-react';
-
-// ✅ นำเข้าฟังก์ชันจากไฟล์ utils ที่คุณให้มา
+import React, { useRef, useEffect, useMemo } from 'react';
+import { ArrowDown, ArrowUp, Minus } from 'lucide-react'; // ✅ เพิ่ม icon Minus มาทำขีด Space
 import { preprocessThaiText } from '../../utils/thaiTextHandler'; 
 
-// --- Helper Functions (ใช้ใน Component นี้สำหรับการแสดงผล) ---
+// --- Helper Functions ---
 const isUpperMark = (char) => {
   const code = char.charCodeAt(0);
   return (code >= 0x0E31 && code <= 0x0E37) || (code >= 0x0E47 && code <= 0x0E4E);
@@ -31,12 +29,9 @@ const TypingGame = ({
 
   const handleClick = () => inputRef.current?.focus();
 
-  // ✅ เรียกใช้ฟังก์ชันแก้สระอำ/วรรณยุกต์ (preprocessThaiText)
-  // ใช้ useMemo เพื่อไม่ให้คำนวณใหม่ทุกครั้งที่พิมพ์ (Performance ดีขึ้น)
+  // จัดการข้อความ
   const processedWords = useMemo(() => {
-     // 1. แปลงข้อความให้ถูกต้อง (เช่น สลับลำดับ น้ำ)
      const cleanedChars = preprocessThaiText(targetText); 
-     // 2. รวมกลับเป็น String แล้วค่อยตัดเป็นคำ (เพื่อรักษา Logic การตัดคำเดิม)
      return cleanedChars.join('').split(' ');
   }, [targetText]);
 
@@ -44,7 +39,7 @@ const TypingGame = ({
 
   return (
     <div 
-      className="relative w-full max-w-6xl mx-auto pt-10 px-4 outline-none" 
+      className="relative w-full max-w-6xl mx-auto pt-16 px-4 outline-none" 
       onClick={handleClick}
     >
       <input
@@ -59,17 +54,16 @@ const TypingGame = ({
       />
 
       {/* Main Container */}
-      <div className={`${fontSize} leading-[3] font-mono tracking-wide flex flex-wrap gap-y-2 text-stone-600 select-none`}>
+      <div className={`${fontSize} leading-[3] font-mono tracking-wide flex flex-wrap gap-y-6 text-stone-600 select-none`}>
         
-        {/* ✅ ใช้ processedWords ที่ผ่านการแก้สระแล้ว แทน targetText ดิบๆ */}
         {processedWords.map((word, wIndex) => {
           const chars = word.split('');
           const isLastWord = wIndex === processedWords.length - 1;
 
           return (
-            // 📦 Word Wrapper
             <div key={wIndex} className="inline-block whitespace-nowrap"> 
               
+              {/* --- 1. ตัวอักษรในคำ --- */}
               {chars.map((char, cIndex) => {
                 const currentIndex = globalCharIndex++;
                 const isTyped = currentIndex < userInput.length;
@@ -83,9 +77,9 @@ const TypingGame = ({
                 if (isWrong) textColor = "text-red-400 opacity-100";
                 if (isActive) textColor = "text-orange-400 opacity-100";
 
-                // Background Highlight
+                // Background Logic
                 const bgClass = isActive 
-                  ? "bg-stone-800 rounded-sm shadow-[0_0_10px_rgba(251,146,60,0.5)]" 
+                  ? "bg-stone-800 rounded-md shadow-[0_0_15px_rgba(251,146,60,0.3)]" 
                   : isWrong 
                     ? "bg-red-900/40 rounded-sm" 
                     : "";
@@ -93,39 +87,67 @@ const TypingGame = ({
                 return (
                   <span 
                     key={`char-${wIndex}-${cIndex}`}
-                    className={`relative inline px-[1px] transition-colors duration-100 ${textColor} ${bgClass}`}
+                    className={`relative inline-flex justify-center items-center px-[1px] transition-all duration-100 ${textColor} ${bgClass}`}
                   >
                     {char}
 
-                    {/* 🏹 Smart Arrow */}
-                    {isActive && isUpperMark(char) && (
-                      <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 animate-bounce text-orange-500 z-20 pointer-events-none">
-                        <ArrowDown size={20} strokeWidth={3} />
-                      </div>
-                    )}
-                    {isActive && isLowerMark(char) && (
-                      <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 animate-bounce text-orange-500 z-20 pointer-events-none">
-                        <ArrowUp size={20} strokeWidth={3} />
-                      </div>
+                    {/* ลูกศรบอกใบ้ (Smart Arrow) */}
+                    {isActive && (
+                      <>
+                        {isUpperMark(char) && (
+                          <div className="absolute -top-9 left-1/2 transform -translate-x-1/2 animate-bounce flex flex-col items-center z-20">
+                            <span className="text-[9px] font-bold text-orange-500 uppercase mb-[-2px]">บน</span>
+                            <ArrowDown size={20} strokeWidth={3} className="text-orange-500" />
+                          </div>
+                        )}
+                        {isLowerMark(char) && (
+                          <div className="absolute -bottom-9 left-1/2 transform -translate-x-1/2 animate-bounce flex flex-col-reverse items-center z-20">
+                             <span className="text-[9px] font-bold text-orange-500 uppercase mt-[-2px]">ล่าง</span>
+                             <ArrowUp size={20} strokeWidth={3} className="text-orange-500" />
+                          </div>
+                        )}
+                        {!isUpperMark(char) && !isLowerMark(char) && (
+                           <div className="absolute -bottom-1 left-0 w-full h-[3px] bg-orange-500 rounded-full animate-pulse shadow-[0_0_8px_orange]" />
+                        )}
+                      </>
                     )}
                   </span>
                 );
               })}
 
-              {/* Spacebar Logic */}
+              {/* --- 2. Spacebar Logic (แก้ไขตรงนี้) --- */}
               {!isLastWord && (() => {
                 const spaceIndex = globalCharIndex++;
                 const isActive = spaceIndex === userInput.length && isGameActive;
-                const isWrong = spaceIndex < userInput.length && userInput[spaceIndex] !== ' ';
+                const isTyped = spaceIndex < userInput.length;
+                const isWrong = isTyped && userInput[spaceIndex] !== ' ';
                 
                 return (
                   <span 
                     key={`space-${wIndex}`}
-                    className={`relative inline-block w-[0.6em] text-center mx-[2px] rounded-sm
+                    className={`relative inline-block mx-[2px] rounded-sm align-middle transition-all duration-100
+                      ${isActive ? "w-[1.5em]" : "w-[0.8em]"} 
                       ${isWrong ? "bg-red-500/50" : ""}
-                      ${isActive ? "bg-stone-700 animate-pulse ring-2 ring-orange-500/50" : ""}
+                      ${isActive ? "bg-stone-800 ring-2 ring-orange-500 shadow-[0_0_15px_rgba(251,146,60,0.4)]" : ""}
                     `}
                   >
+                    {/* ถ้าถึงตา Spacebar ให้โชว์คำว่า Space เด้งๆ */}
+                    {isActive && (
+                      <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 animate-bounce flex flex-col items-center min-w-[50px] z-30">
+                        <span className="text-[10px] font-bold text-orange-400 bg-stone-900/80 px-2 py-0.5 rounded-full border border-orange-500/50 mb-1">
+                          Space
+                        </span>
+                        <ArrowDown size={16} className="text-orange-500" />
+                      </div>
+                    )}
+
+                    {/* สัญลักษณ์ ␣ จางๆ ตรงกลางปุ่ม */}
+                    <span className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xs font-bold
+                      ${isActive ? "text-orange-500 opacity-100" : "text-stone-600 opacity-0"}
+                    `}>
+                      ␣
+                    </span>
+
                     &nbsp;
                   </span>
                 );
@@ -137,7 +159,7 @@ const TypingGame = ({
 
       {!isGameActive && userInput.length === 0 && (
          <div className="mt-12 text-center text-stone-500 animate-pulse font-light">
-            แตะแป้นพิมพ์เพื่อเริ่ม...
+            เริ่มพิมพ์ได้เลย...
          </div>
       )}
     </div>

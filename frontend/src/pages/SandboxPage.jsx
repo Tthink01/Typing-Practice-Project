@@ -4,7 +4,7 @@ import { ChevronLeft } from "lucide-react";
 
 import Navbar from "../components/Navbar";
 import TypingStats from "../components/Sandbox/TypingStats";
-import TypingGame from "../components/Shared/TypingGame"; // ✅ นำเข้าตัวใหม่
+import SandboxTypingGame from '../components/Sandbox/SandboxTypingGame';
 import { getRandomText } from "../data/wordList";
 
 const SandboxPage = () => {
@@ -84,11 +84,10 @@ const SandboxPage = () => {
             onReset={resetGame}
           />
 
-          <TypingGame
+          <SandboxTypingGame
             targetText={targetText}
             userInput={userInput}
             onInputChange={handleInputChange}
-            isGameActive={true} // Sandbox ถือว่า active ตลอด
           />
         </div>
       </main>
