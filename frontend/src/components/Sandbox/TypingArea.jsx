@@ -59,11 +59,11 @@ const TypingArea = ({ targetText, userInput, onInputChange }) => {
       </div>
 
       {/* ข้อความด้านล่าง */}
-      <div className="absolute bottom-0 left-0 w-full text-center py-6 mt-10 border-t border-stone-800/50">
+      {/* <div className="absolute bottom-0 left-0 w-full text-center py-6 mt-10 border-t border-stone-800/50">
         <span className="text-stone-600 text-sm group-hover:text-stone-400 transition-colors">
           กดปุ่มใดก็ได้เพื่อเริ่มพิมพ์ทดสอบความเร็ว
         </span>
-      </div>
+      </div> */}
     </div>
   );
 };

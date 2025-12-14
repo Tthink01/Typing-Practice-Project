@@ -16,7 +16,17 @@ const HomePage = () => {
   const navigate = useNavigate();
   
   // --- States ---
-  const [showWelcome, setShowWelcome] = useState(true);
+  // const [showWelcome, setShowWelcome] = useState(true);
+  const [showWelcome, setShowWelcome] = useState(() => {
+    // ถ้ามีค่า 'hasSeenWelcome' ใน session แล้ว ให้เป็น false (ไม่โชว์)
+    return !sessionStorage.getItem("hasSeenWelcome");
+  });
+
+  const handleStart = () => {
+    setShowWelcome(false);
+    sessionStorage.setItem("hasSeenWelcome", "true");
+  };
+
   const [activeModal, setActiveModal] = useState(null); // 'basic', 'pro', or null
   const [practiceLanguage, setPracticeLanguage] = useState('TH');
 
@@ -47,7 +57,9 @@ const HomePage = () => {
     <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col relative overflow-hidden font-sans">
       
       {/* Background & Effects */}
-      {showWelcome && <WelcomeScreen onStart={() => setShowWelcome(false)} />}
+      {showWelcome && (
+        <WelcomeScreen onStart={handleStart} />
+      )}
       <div className="absolute top-[-10%] left-1/2 transform -translate-x-1/2 w-[800px] h-[500px] bg-orange-900/20 rounded-full blur-[120px] pointer-events-none" />
 
       {/* Navigation */}

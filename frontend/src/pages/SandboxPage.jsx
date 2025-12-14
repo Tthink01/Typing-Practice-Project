@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
 
+
+import Navbar from "../components/Navbar"
 import TypingStats from "../components/Sandbox/TypingStats";
 import TypingArea from "../components/Sandbox/TypingArea";
 import { getRandomText } from "../data/wordList";
@@ -38,6 +40,7 @@ const SandboxPage = () => {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col font-sans">
+      <Navbar />
       <header className="px-8 py-6 flex justify-between items-center max-w-7xl mx-auto w-full">
         <button
           onClick={() => navigate("/")}
