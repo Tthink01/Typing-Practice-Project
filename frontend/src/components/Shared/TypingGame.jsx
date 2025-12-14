@@ -1,7 +1,10 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react'; // ✅ เพิ่ม useMemo
 import { ArrowDown, ArrowUp } from 'lucide-react';
 
-// --- Helper Functions ---
+// ✅ นำเข้าฟังก์ชันจากไฟล์ utils ที่คุณให้มา
+import { preprocessThaiText } from '../../utils/thaiTextHandler'; 
+
+// --- Helper Functions (ใช้ใน Component นี้สำหรับการแสดงผล) ---
 const isUpperMark = (char) => {
   const code = char.charCodeAt(0);
   return (code >= 0x0E31 && code <= 0x0E37) || (code >= 0x0E47 && code <= 0x0E4E);
@@ -28,9 +31,16 @@ const TypingGame = ({
 
   const handleClick = () => inputRef.current?.focus();
 
+  // ✅ เรียกใช้ฟังก์ชันแก้สระอำ/วรรณยุกต์ (preprocessThaiText)
+  // ใช้ useMemo เพื่อไม่ให้คำนวณใหม่ทุกครั้งที่พิมพ์ (Performance ดีขึ้น)
+  const processedWords = useMemo(() => {
+     // 1. แปลงข้อความให้ถูกต้อง (เช่น สลับลำดับ น้ำ)
+     const cleanedChars = preprocessThaiText(targetText); 
+     // 2. รวมกลับเป็น String แล้วค่อยตัดเป็นคำ (เพื่อรักษา Logic การตัดคำเดิม)
+     return cleanedChars.join('').split(' ');
+  }, [targetText]);
+
   let globalCharIndex = 0;
-  // แยกเป็นคำๆ เพื่อจัดการ Word Wrap (คำไม่ขาด)
-  const words = targetText.split(' ');
 
   return (
     <div 
@@ -48,18 +58,16 @@ const TypingGame = ({
         disabled={!isGameActive} 
       />
 
-      {/* Main Container:
-         - leading-loose: เพิ่มระยะห่างบรรทัดให้พอสำหรับสระบน/ล่าง (สำคัญมากสำหรับภาษาไทย)
-         - flex-wrap: ให้คำไหลตกบรรทัดได้
-      */}
+      {/* Main Container */}
       <div className={`${fontSize} leading-[3] font-mono tracking-wide flex flex-wrap gap-y-2 text-stone-600 select-none`}>
         
-        {words.map((word, wIndex) => {
+        {/* ✅ ใช้ processedWords ที่ผ่านการแก้สระแล้ว แทน targetText ดิบๆ */}
+        {processedWords.map((word, wIndex) => {
           const chars = word.split('');
-          const isLastWord = wIndex === words.length - 1;
+          const isLastWord = wIndex === processedWords.length - 1;
 
           return (
-            // 📦 Word Wrapper: ห่อคำไว้ด้วยกัน ห้ามแตกกลางคัน
+            // 📦 Word Wrapper
             <div key={wIndex} className="inline-block whitespace-nowrap"> 
               
               {chars.map((char, cIndex) => {
@@ -70,13 +78,12 @@ const TypingGame = ({
                 const isActive = currentIndex === userInput.length && isGameActive;
                 
                 // Color Logic
-                let textColor = "text-stone-700 opacity-30"; // ยังไม่พิมพ์ (จางๆ)
+                let textColor = "text-stone-700 opacity-30";
                 if (isCorrect) textColor = "text-stone-100 opacity-100";
                 if (isWrong) textColor = "text-red-400 opacity-100";
                 if (isActive) textColor = "text-orange-400 opacity-100";
 
-                // Background Highlight (เฉพาะตัวที่กำลังพิมพ์ หรือ พิมพ์ผิด)
-                // ใช้ bg แทน cursor ขีดๆ เพราะเข้ากับภาษาไทยมากกว่า (ไม่บังวรรณยุกต์)
+                // Background Highlight
                 const bgClass = isActive 
                   ? "bg-stone-800 rounded-sm shadow-[0_0_10px_rgba(251,146,60,0.5)]" 
                   : isWrong 
@@ -84,15 +91,13 @@ const TypingGame = ({
                     : "";
 
                 return (
-                  // ✨ Core Logic: ใช้ relative + inline 
-                  // เพื่อให้ Browser ผสมคำไทยให้อัตโนมัติ (สระจะไม่ลอยมั่วแล้ว)
                   <span 
                     key={`char-${wIndex}-${cIndex}`}
                     className={`relative inline px-[1px] transition-colors duration-100 ${textColor} ${bgClass}`}
                   >
                     {char}
 
-                    {/* 🏹 Smart Arrow: ลูกศรบอกใบ้ (ยังอยู่เหมือนเดิม) */}
+                    {/* 🏹 Smart Arrow */}
                     {isActive && isUpperMark(char) && (
                       <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 animate-bounce text-orange-500 z-20 pointer-events-none">
                         <ArrowDown size={20} strokeWidth={3} />
@@ -121,7 +126,7 @@ const TypingGame = ({
                       ${isActive ? "bg-stone-700 animate-pulse ring-2 ring-orange-500/50" : ""}
                     `}
                   >
-                    &nbsp; {/* ใช้ Non-breaking space เพื่อดันระยะ */}
+                    &nbsp;
                   </span>
                 );
               })()}
