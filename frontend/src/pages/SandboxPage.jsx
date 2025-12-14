@@ -2,10 +2,9 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
 
-
-import Navbar from "../components/Navbar"
+import Navbar from "../components/Navbar";
 import TypingStats from "../components/Sandbox/TypingStats";
-import TypingArea from "../components/Sandbox/TypingArea";
+import TypingGame from "../components/Shared/TypingGame"; // ✅ นำเข้าตัวใหม่
 import { getRandomText } from "../data/wordList";
 
 const SandboxPage = () => {
@@ -66,7 +65,6 @@ const SandboxPage = () => {
 
           <button
             onClick={() => startNewGame("EN")}
-            
             className={`px-4 py-1.5 rounded-full text-xs font-bold ${
               lang === "EN"
                 ? "bg-orange-500 text-white"
@@ -86,10 +84,11 @@ const SandboxPage = () => {
             onReset={resetGame}
           />
 
-          <TypingArea
+          <TypingGame
             targetText={targetText}
             userInput={userInput}
             onInputChange={handleInputChange}
+            isGameActive={true} // Sandbox ถือว่า active ตลอด
           />
         </div>
       </main>
