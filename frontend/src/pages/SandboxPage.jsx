@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useRef } from "react"; // ✅ เพิ่ม useRef
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Eye, ChevronDown } from "lucide-react";
+import { ChevronLeft, RefreshCw, Globe } from "lucide-react";
 
+// Components
 import Navbar from "../components/Navbar";
-import TypingStats from "../components/Sandbox/TypingStats";
 
-import SandboxTypingGame from '../components/Sandbox/SandboxTypingGame';
-import TypingGame from '../components/Shared/TypingGame';
+// New Components (Shared)
+import Floater from "../components/Shared/Floater";
+import SummaryPopup from "../components/Shared/SummaryPopup";
 
 import { getRandomText } from "../data/wordList";
 
@@ -18,49 +19,46 @@ const SandboxPage = () => {
   const [lang, setLang] = useState("TH");
   const [userInput, setUserInput] = useState("");
   const [isGameActive, setIsGameActive] = useState(true);
-  
-  const [visualMode, setVisualMode] = useState("sandbox");
-  
-  // ✅ State สำหรับคุมการเปิด/ปิด Dropdown (แก้ปัญหาหุบเอง)
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef(null); // ใช้เช็คคลิกข้างนอก
+  const [targetText, setTargetText] = useState(() => getRandomText("TH", TOTAL_WORDS));
 
-  const [targetText, setTargetText] = useState(() =>
-    getRandomText("TH", TOTAL_WORDS)
-  );
+  // --- Stats & Logic States ---
+  const [, setStartTime] = useState(null);
+  const [showSummary, setShowSummary] = useState(false);
+  const [finalStats, setFinalStats] = useState({ wpm: 0, accuracy: 0, wrongKeys: [], fastestKey: '-', slowestKey: '-' });
+  const [floaters, setFloaters] = useState([]); 
+  
+  // Refs
+  const inputRef = useRef(null); 
+  const keyTimes = useRef({});
+  const lastKeyTime = useRef(0);
+  const wrongKeysRef = useRef(new Set());
+
+  // คำนวณ Progress Bar
+  const progressPercent = targetText.length > 0 ? (userInput.length / targetText.length) * 100 : 0;
+  const wordCount = userInput.trim().split(/\s+/).filter(Boolean).length;
 
   // --- Effects ---
-  // เพิ่ม: คลิกที่อื่นเพื่อปิด Dropdown
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  // --- Handlers ---
-  const resetGame = () => {
-    setIsGameActive(false);
-    setTimeout(() => {
-        setTargetText(getRandomText(lang, TOTAL_WORDS));
-        setUserInput("");
-        setIsGameActive(true);
-    }, 50);
-  };
-
-  const handleInputChange = (e) => {
-    const val = e.target.value;
-    if (val.length <= targetText.length) {
-      setUserInput(val);
+    if (isGameActive && !showSummary) {
+        inputRef.current?.focus();
     }
+  }, [isGameActive, showSummary, targetText]);
+
+  // --- Helper: Reset Logic ---
+  const resetLogic = () => {
+    setStartTime(null);
+    keyTimes.current = {};
+    lastKeyTime.current = 0;
+    wrongKeysRef.current = new Set();
+    setFloaters([]);
+    setShowSummary(false);
   };
 
-  const startNewGame = (selectedLang) => {
+  const startNewGame = (selectedLang = lang) => {
     setLang(selectedLang);
     setIsGameActive(false);
+    resetLogic();
+    
     setTimeout(() => {
         setTargetText(getRandomText(selectedLang, TOTAL_WORDS));
         setUserInput("");
@@ -68,134 +66,247 @@ const SandboxPage = () => {
     }, 50);
   };
 
-  const handleModeSelect = (mode) => {
-      setVisualMode(mode);
-      setIsDropdownOpen(false); // เลือกเสร็จสั่งปิดเมนูทันที
-  };
+  // --- Floater Logic ---
+  const addFloater = useCallback((char, index, isCorrect) => {
+    const el = document.getElementById(`sb-char-${index}`);
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      const id = Date.now() + Math.random(); 
+      setFloaters(prev => [...prev, { 
+        id, 
+        char, 
+        x: rect.left + rect.width / 2, 
+        y: rect.top, 
+        isCorrect 
+      }]);
+    }
+  }, []);
 
-  const wordsTyped = userInput.trim().split(/\s+/).filter(Boolean).length;
+  // --- Typing Handler ---
+  const handleInputChange = useCallback((e) => {
+    if (!isGameActive || showSummary) return;
+
+    const val = e.target.value;
+    const now = Date.now(); 
+
+    if (val.length < userInput.length) return; 
+
+    if (val.length <= targetText.length) {
+      if (val.length === 1 && userInput.length === 0) {
+        setStartTime(now);
+        lastKeyTime.current = now;
+      }
+
+      if (val.length > userInput.length) {
+        const char = val.slice(-1);
+        const index = val.length - 1;
+        const targetChar = targetText[index];
+        const duration = lastKeyTime.current === 0 ? 0 : now - lastKeyTime.current;
+
+        if (!keyTimes.current[char]) keyTimes.current[char] = [];
+        keyTimes.current[char].push(duration);
+
+        const isCorrect = char === targetChar;
+        if (!isCorrect) {
+            wrongKeysRef.current.add(targetChar + " (" + char + ")");
+        }
+
+        addFloater(char, index, isCorrect);
+        lastKeyTime.current = now;
+      }
+
+      setUserInput(val);
+
+      if (val.length === targetText.length) {
+        setIsGameActive(false);
+        const endTime = Date.now();
+        
+        setStartTime(currentStartTime => {
+            const startT = currentStartTime || endTime; 
+            const durationMin = (endTime - startT) / 60000 || 0.001;
+            const wpm = Math.round((val.length / 5) / durationMin);
+
+            let correctChars = 0;
+            for (let i = 0; i < val.length; i++) {
+                if (val[i] === targetText[i]) correctChars++;
+            }
+            const accuracy = Math.round((correctChars / val.length) * 100);
+
+            let fast = { char: '-', time: Infinity };
+            let slow = { char: '-', time: 0 };
+            
+            Object.entries(keyTimes.current).forEach(([char, times]) => {
+                const avg = times.reduce((a,b)=>a+b,0) / times.length;
+                if (avg < fast.time) fast = { char, time: avg };
+                if (avg > slow.time) slow = { char, time: avg };
+            });
+
+            setFinalStats({
+                wpm,
+                accuracy,
+                wrongKeys: Array.from(wrongKeysRef.current),
+                fastestKey: fast.char !== '-' ? `${fast.char} (${Math.round(fast.time)}ms)` : '-',
+                slowestKey: slow.char !== '-' ? `${slow.char} (${Math.round(slow.time)}ms)` : '-'
+            });
+            
+            return currentStartTime;
+        });
+
+        setTimeout(() => setShowSummary(true), 500);
+      }
+    }
+  }, [isGameActive, showSummary, userInput, targetText, addFloater]);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col font-sans overflow-x-hidden">
+    <div className="w-full min-h-screen bg-stone-950 text-orange-50 font-sans flex flex-col relative overflow-hidden pt-24">
+      {/* Background Effects */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-orange-600/10 rounded-full blur-[120px]"></div>
+      </div>
+
       <Navbar />
       
-      {/* Header */}
-      <header className="px-8 py-6 flex flex-col md:flex-row gap-4 justify-between items-center max-w-7xl mx-auto w-full z-10 relative">
-        <button
-          onClick={() => navigate("/")}
-          className="flex items-center gap-2 text-orange-500 hover:text-orange-400 font-bold group self-start md:self-auto"
-        >
-          <div className="p-2 rounded-full bg-stone-900 border border-stone-800 group-hover:border-orange-500/50 transition-colors">
-            <ChevronLeft size={20} />
+      {/* ✅ จุดที่แก้ไข: เพิ่ม mt-8 (ดันลงมา) และ z-20 (ให้อยู่เหนือ layer อื่น)
+         เปลี่ยนจาก pt-4 เป็น pt-8 หรือ mt-8 เพื่อหนี Navbar 
+      */}
+      <div className="max-w-4xl mx-auto w-full h-full flex flex-col mt-8 relative z-20 px-4 flex-grow">
+        
+        {/* Header Control */}
+        <div className="flex justify-between items-center mb-6 pl-2 md:pl-0 w-full">
+          
+          {/* ปุ่มย้อนกลับ (ซ้าย) */}
+          <button 
+            onClick={() => navigate("/")} 
+            className="flex items-center gap-2 cursor-pointer text-orange-500 hover:text-orange-400 transition-colors group z-50"
+          >
+            <div className="p-2 rounded-full bg-stone-900 border border-stone-800 group-hover:border-orange-500/50 transition-colors shadow-lg">
+              <ChevronLeft size={20} />
+            </div>
+            <span className="text-sm font-bold">กลับเมนูหลัก</span>
+          </button>
+
+          {/* ปุ่มเปลี่ยนภาษา (ขวา) */}
+          <div className="flex items-center gap-1 bg-stone-900 rounded-full p-1 border border-stone-800 shadow-xl z-50">
+            <div className="px-3 flex items-center gap-2 text-stone-400">
+               <Globe size={14} />
+               <span className="text-xs font-bold uppercase tracking-wider hidden sm:inline">Lang:</span>
+            </div>
+            
+            {["TH", "EN"].map((l) => (
+                <button 
+                    key={l}
+                    onClick={() => startNewGame(l)} 
+                    className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all duration-200 ${
+                        lang === l 
+                        ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30' 
+                        : 'text-stone-500 hover:bg-stone-800 hover:text-white'
+                    }`}
+                >
+                    {l === "TH" ? "ไทย" : "Eng"}
+                </button>
+            ))}
           </div>
-          กลับไปหน้าหลัก
-        </button>
 
-        <div className="bg-stone-900 p-1 rounded-full border border-stone-800 flex gap-1">
-          <button
-            onClick={() => startNewGame("TH")}
-            className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
-              lang === "TH"
-                ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
-                : "text-stone-500 hover:text-white"
-            }`}
-          >
-            ไทย
-          </button>
-          <button
-            onClick={() => startNewGame("EN")}
-            className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
-              lang === "EN"
-                ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
-                : "text-stone-500 hover:text-white"
-            }`}
-          >
-            Eng
-          </button>
         </div>
-      </header>
 
-      {/* Main Game Area */}
-      <main className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-5xl bg-[#111111] border border-stone-800 rounded-3xl p-8 shadow-2xl flex flex-col relative overflow-visible"> 
-            
-            <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-orange-500/5 rounded-full blur-[100px] pointer-events-none" />
+        {/* Typing Area Card */}
+        <div 
+          className="bg-stone-900 rounded-3xl p-6 md:p-12 shadow-2xl border border-stone-800 relative flex-grow max-h-[600px] flex flex-col z-10"
+          onClick={() => inputRef.current?.focus()}
+        >
+          {/* Progress Bar */}
+          <div className="w-full h-1.5 bg-stone-800 rounded-full mb-8 overflow-hidden relative">
+            <div 
+              className="absolute top-0 left-0 h-full bg-gradient-to-r from-orange-600 via-orange-500 to-yellow-400 transition-all duration-200 ease-out shadow-[0_0_10px_rgba(249,115,22,0.6)]" 
+              style={{ width: `${Math.min(progressPercent, 100)}%` }}
+            />
+          </div>
 
-            {/* ✅ Control Zone: สลับตำแหน่งแล้ว */}
-            <div className="flex flex-col-reverse md:flex-row justify-between items-end gap-4 mb-6 relative z-20">
-                
-                {/* 1. Dropdown (ย้ายมาซ้าย) */}
-                <div className="relative shrink-0" ref={dropdownRef}>
-                    <button 
-                        onClick={() => setIsDropdownOpen(!isDropdownOpen)} // คลิกเพื่อเปิด/ปิด
-                        className={`flex items-center gap-2 px-3 py-2 bg-stone-900 border rounded-lg text-xs font-bold transition-all shadow-lg
-                            ${isDropdownOpen ? "border-orange-500 text-white" : "border-stone-800 text-stone-400 hover:text-white hover:border-stone-600"}
-                        `}
-                    >
-                        <Eye size={16} className={visualMode === 'sandbox' ? "text-stone-500" : "text-orange-500"} />
-                        <span>{visualMode === 'sandbox' ? "Clean Mode" : "Hint Mode"}</span>
-                        <ChevronDown size={14} className={`transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`} />
-                    </button>
-
-                    {/* Menu (แสดงเมื่อ state เป็น true) */}
-                    {isDropdownOpen && (
-                        <div className="absolute top-full left-0 mt-2 w-48 bg-[#1a1a1a] border border-stone-700 rounded-xl shadow-xl overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-100">
-                            <div 
-                                onClick={() => handleModeSelect("sandbox")}
-                                className={`px-4 py-3 text-xs cursor-pointer hover:bg-stone-800 flex items-center gap-3 ${visualMode === 'sandbox' ? 'text-orange-500 bg-orange-500/10' : 'text-stone-400'}`}
-                            >
-                                <span className="text-lg">✨</span>
-                                <div>
-                                    <div className="font-bold">แบบคลีน</div>
-                                    <div className="text-[10px] opacity-70">ไม่มีตัวช่วย สบายตา</div>
-                                </div>
-                            </div>
-                            <div 
-                                onClick={() => handleModeSelect("practice")}
-                                className={`px-4 py-3 text-xs cursor-pointer hover:bg-stone-800 flex items-center gap-3 ${visualMode === 'practice' ? 'text-orange-500 bg-orange-500/10' : 'text-stone-400'}`}
-                            >
-                                <span className="text-lg">🎯</span>
-                                <div>
-                                    <div className="font-bold">แบบมีตัวช่วย</div>
-                                    <div className="text-[10px] opacity-70">ลูกศรบอกใบ้ + Space</div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                {/* 2. Stats (อยู่ขวา / เต็มพื้นที่) */}
-                <div className="w-full md:w-auto flex-1">
-                    <TypingStats
-                        wordCount={wordsTyped}
-                        totalWords={TOTAL_WORDS}
-                        onReset={resetGame}
-                    />
-                </div>
-
+          {/* Stats Header */}
+          <div className="flex justify-between items-center mb-4 relative z-10">
+            <div className="flex gap-6 items-baseline">
+              <div className="text-stone-400 text-sm">Mode: <span className="text-orange-400 font-bold">Speed Test</span></div>
+              <div className="text-stone-400 text-sm">Words: <span className="text-white font-bold">{wordCount} / {TOTAL_WORDS}</span></div>
             </div>
+            <button 
+              onClick={(e) => { e.stopPropagation(); startNewGame(lang); }} 
+              className="p-2 hover:bg-stone-800 rounded-lg text-stone-400 hover:text-orange-300 transition-colors group"
+            >
+              <RefreshCw size={20} className="group-hover:rotate-180 transition-transform duration-500"/>
+            </button>
+          </div>
 
-            {/* Game Content */}
-            <div className="min-h-[200px] flex items-center z-10">
-                {visualMode === "sandbox" ? (
-                    <SandboxTypingGame
-                        targetText={targetText}
-                        userInput={userInput}
-                        onInputChange={handleInputChange}
-                        isGameActive={isGameActive}
-                    />
-                ) : (
-                    <TypingGame
-                        targetText={targetText}
-                        userInput={userInput}
-                        onInputChange={handleInputChange}
-                        isGameActive={isGameActive}
-                    />
-                )}
-            </div>
+          {/* Text Display Area */}
+          <div className="relative font-mono text-2xl md:text-3xl break-words flex-grow overflow-y-auto custom-scrollbar outline-none cursor-text select-none pt-4" style={{ letterSpacing: '0.05em', lineHeight: '2em', whiteSpace: 'pre-wrap' }}>
+            {targetText.split('').map((char, index) => {
+              let colorClass = "text-stone-600";
+              let borderClass = "";
+              let extraClass = "";
+
+              if (index < userInput.length) {
+                if (userInput[index] === char) {
+                  colorClass = "text-stone-100";
+                } else {
+                  colorClass = "text-red-500 bg-red-500/10 rounded";
+                }
+              } else if (index === userInput.length) {
+                colorClass = "text-orange-400";
+                borderClass = "border-b-2 border-orange-400";
+                extraClass = "animate-pulse";
+              }
+
+              const isCombining = /[\u0E31\u0E34-\u0E3A\u0E47-\u0E4E]/.test(char);
+              const finalChar = (index === userInput.length && isCombining) 
+                ? <><span className="opacity-50 font-sans">◌</span>{char}</> 
+                : char;
+
+              return (
+                <span 
+                  id={`sb-char-${index}`} 
+                  key={index} 
+                  className={`${colorClass} ${borderClass} ${extraClass} transition-colors duration-100 inline min-w-[1px] relative`}
+                >
+                  {finalChar}
+                </span>
+              );
+            })}
             
+            <input 
+              ref={inputRef} 
+              type="text" 
+              className="absolute opacity-0 top-0 left-0 w-full h-full cursor-text" 
+              value={userInput} 
+              onChange={handleInputChange} 
+              autoComplete="off" 
+              spellCheck="false" 
+            />
+          </div>
+
+          <div className="mt-8 pt-4 border-t border-stone-800 flex justify-center text-stone-500 text-sm">
+            กดปุ่มใดก็ได้เพื่อเริ่มพิมพ์ทดสอบความเร็ว
+          </div>
         </div>
-      </main>
+      </div>
+
+      {/* Floater & Popup */}
+      {floaters.map(f => (
+        <Floater 
+          key={f.id} 
+          x={f.x} 
+          y={f.y} 
+          char={f.char} 
+          isCorrect={f.isCorrect} 
+          onRemove={() => setFloaters(prev => prev.filter(item => item.id !== f.id))} 
+        />
+      ))}
+
+      {showSummary && (
+        <SummaryPopup 
+          stats={finalStats} 
+          onNext={() => startNewGame(lang)} 
+        />
+      )}
+
     </div>
   );
 };
