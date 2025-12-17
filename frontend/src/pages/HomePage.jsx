@@ -17,7 +17,7 @@ import { EXERCISES_DATA } from "../data/exercises.js";
 const useWelcomeLogic = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   // State เริ่มต้น: เช็คจาก Session ว่าเคยดูหรือยัง
   const [showWelcome, setShowWelcome] = useState(() => {
     return !sessionStorage.getItem("hasSeenWelcome");
@@ -66,8 +66,10 @@ const useGameFlow = () => {
 
   // Handler: เมื่อกดเริ่มเกมจากใน Modal
   const handleLevelStart = (levelId) => {
-    console.log(`Start Game: Mode ${activeModal}, Level ${levelId}`);
-    setActiveModal(null);
+    if (activeModal && levelId) {
+      navigate(`/game/${activeModal}/${levelId}`);
+      setActiveModal(null); // ปิด Modal
+    }
     // navigate(`/game/${activeModal}/${levelId}`); // รอเปิดใช้งาน
   };
 
@@ -98,9 +100,10 @@ const HomePage = () => {
     handleLevelStart,
   } = useGameFlow();
 
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col relative overflow-hidden font-sans">
-      
       {/* --- Layer 1: Welcome Screen Overlay --- */}
       {showWelcome && <WelcomeScreen onStart={handleStartGame} />}
 
@@ -109,14 +112,13 @@ const HomePage = () => {
 
       {/* --- Layer 3: Main Content --- */}
       <main className="flex-1 flex flex-col items-center justify-center px-4 mt-10 z-10">
-        
         <HeroSection />
 
         {/* Mode Selection Grid */}
         <div className="flex flex-col md:flex-row font-itim gap-6 md:gap-8 justify-center items-center w-full max-w-4xl mt-8">
           {GAME_MODES.map((mode) => (
-            <div 
-              key={mode.id} 
+            <div
+              key={mode.id}
               onClick={() => handleCardClick(mode)}
               className="cursor-pointer transition-transform hover:scale-105"
             >
@@ -125,7 +127,11 @@ const HomePage = () => {
                 level={mode.level}
                 description={mode.description}
                 isLocked={mode.isLocked}
-                helpText={mode.id === "basic" ? "ผู้ใช้ต้องเล่นให้ผ่าน 3/5 รอบ เพื่อปลดล็อคด่านถัดไป🩷" : "ต้องเล่นให้ผ่าน 3 ด่าน ของระดับพื้นฐาน เพื่อปลดล็อค ระดับใช้ได้✌🏻❤️"}
+                helpText={
+                  mode.id === "basic"
+                    ? "ผู้ใช้ต้องเล่นให้ผ่าน 3/5 รอบ เพื่อปลดล็อคด่านถัดไป🩷"
+                    : "ต้องเล่นให้ผ่าน 3 ด่าน ของระดับพื้นฐาน เพื่อปลดล็อค ระดับใช้ได้✌🏻❤️"
+                }
               />
             </div>
           ))}
@@ -135,7 +141,11 @@ const HomePage = () => {
       {/* --- Layer 4: Floating UI Elements --- */}
       {/* Right Arrow (Desktop Only) */}
       <div className="absolute right-4 top-1/2 transform -translate-y-1/2 hidden md:block z-20">
-        <button className="p-3 bg-[#1a1a1a] border border-gray-800 rounded-lg hover:border-orange-500 text-orange-500 transition-colors shadow-lg">
+        <button
+          onClick={() => navigate("/sandbox")} // ✅ เพิ่มบรรทัดนี้
+          className="p-3 bg-[#1a1a1a] border border-gray-800 rounded-lg hover:border-orange-500 text-orange-500 transition-colors shadow-lg cursor-pointer" // เพิ่ม cursor-pointer เพื่อความชัวร์
+          title="ไปโหมดพิมพ์อิสระ" // (Optional) เพิ่ม tooltip บอกผู้ใช้หน่อยก็ดีครับ
+        >
           ❯
         </button>
       </div>
@@ -144,9 +154,15 @@ const HomePage = () => {
       <LevelSelectModal
         isOpen={!!activeModal}
         onClose={() => setActiveModal(null)}
-        title={activeModal === "basic" ? "ระดับพื้นฐาน (Basic)" : "ระดับใช้งานจริง (Pro)"}
+        title={
+          activeModal === "basic"
+            ? "ระดับพื้นฐาน (Basic)"
+            : "ระดับใช้งานจริง (Pro)"
+        }
         type={activeModal || "basic"}
-        exercises={activeModal ? EXERCISES_DATA[activeModal] : EXERCISES_DATA["basic"]}
+        exercises={
+          activeModal ? EXERCISES_DATA[activeModal] : EXERCISES_DATA["basic"]
+        }
         language={practiceLanguage}
         setLanguage={setPracticeLanguage}
         isLevelUnlocked={isLevelUnlocked}

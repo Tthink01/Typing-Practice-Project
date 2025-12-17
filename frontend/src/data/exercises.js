@@ -1,3 +1,5 @@
+// src/data/exercises.js
+
 export const EXERCISES_DATA = {
   basic: {
     TH: [
