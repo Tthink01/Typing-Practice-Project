@@ -113,7 +113,7 @@ const HomePage = () => {
         <HeroSection />
 
         {/* Mode Selection Grid */}
-        <div className="flex flex-col md:flex-row gap-6 md:gap-8 justify-center items-center w-full max-w-4xl mt-8">
+        <div className="flex flex-col md:flex-row font-itim gap-6 md:gap-8 justify-center items-center w-full max-w-4xl mt-8">
           {GAME_MODES.map((mode) => (
             <div 
               key={mode.id} 
@@ -125,7 +125,7 @@ const HomePage = () => {
                 level={mode.level}
                 description={mode.description}
                 isLocked={mode.isLocked}
-                helpText={mode.id === "basic" ? "ผู้ใช้ต้องเล่นให้ผ่าน 3/5 รอบ เพื่อปลดล็อคด่านถัดไป🩷" : "คำแนะนำ Pro..."}
+                helpText={mode.id === "basic" ? "ผู้ใช้ต้องเล่นให้ผ่าน 3/5 รอบ เพื่อปลดล็อคด่านถัดไป🩷" : "ต้องเล่นให้ผ่าน 3 ด่าน ของระดับพื้นฐาน เพื่อปลดล็อค ระดับใช้ได้✌🏻❤️"}
               />
             </div>
           ))}

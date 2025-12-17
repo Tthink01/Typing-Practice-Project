@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useMemo } from 'react';
-import { ArrowDown, ArrowUp, Minus } from 'lucide-react'; // ✅ เพิ่ม icon Minus มาทำขีด Space
+import { ArrowDown, ArrowUp, Minus } from 'lucide-react'; 
 import { preprocessThaiText } from '../../utils/thaiTextHandler'; 
 
 // --- Helper Functions ---

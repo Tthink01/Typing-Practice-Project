@@ -11,7 +11,7 @@ const LevelSelectModal = ({ isOpen, onClose, title, type, exercises, language, s
     : { bg: "bg-gradient-to-r from-amber-400 to-amber-500", text: "text-stone-900" };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fade-in">
+    <div className="fixed inset-0 font-itim z-[100] flex items-center justify-center p-4 animate-fade-in">
       {/* พื้นหลังสีดำจางๆ */}
       <div className="absolute inset-0 bg-stone-950/80 backdrop-blur-md" onClick={onClose}></div>
       

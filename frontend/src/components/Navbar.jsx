@@ -122,7 +122,7 @@ const Navbar = () => {
       {/* 3. ส่วนด้านขวา (Login / User) */}
       <div>
         {user ? (
-          <div className="flex items-center gap-3 bg-[#27272a] pl-4 pr-1 py-1 rounded-full border border-[#3f3f46]">
+          <div className="flex items-center font-itim gap-3 bg-[#27272a] pl-4 pr-1 py-1 rounded-full border border-[#3f3f46]">
             <div className="flex flex-col items-end leading-none mr-1">
               <span className="text-gray-200 font-semibold text-sm">
                 {user.username}
@@ -142,7 +142,7 @@ const Navbar = () => {
           </div>
         ) : (
           <Link to="/login">
-            <button className="flex items-center gap-2 bg-[#27272a] hover:bg-[#3f3f46] text-gray-300 hover:text-white px-5 py-2.5 rounded-full border border-[#3f3f46] text-sm font-medium transition-all duration-200">
+            <button className="flex items-center gap-2 bg-[#27272a] hover:bg-[#3f3f46] text-gray-300 hover:text-white px-5 py-2.5 rounded-full border border-[#3f3f46] text-sm font-itim transition-all duration-200">
               <User size={16} />
               <span>ลงชื่อเข้าใช้ / สมัคร</span>
             </button>

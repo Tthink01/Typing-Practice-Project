@@ -1,4 +1,12 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@100;200;300;400;500;600;700&family=Itim&family=Mali:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;1,200;1,300;1,400;1,500;1,600;1,700&family=Niramit:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;1,200;1,300;1,400;1,500;1,600;1,700&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap");
 @import "tailwindcss";
+
+@theme {
+  --font-mali: "Mali", cursive;
+  --font-itim: "Itim", cursive;
+  --font-IBM: "IBM Plex Sans Thai", sans-serif;
+  --font-niramit: "Niramit", sans-serif;
+}
 
 /* ======================================================
    ✨ CSS สำหรับหน้า Welcome Screen (จากไฟล์ล่าสุด)

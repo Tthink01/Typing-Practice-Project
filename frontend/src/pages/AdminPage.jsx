@@ -3,6 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 
+
 const AdminPage = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true); // เพิ่มสถานะ Loading
@@ -83,6 +84,7 @@ const AdminPage = () => {
   };
 
   return (
+    
     <div className="min-h-screen bg-[#0a0a0a] text-white font-sans">
       <Navbar />
 
@@ -147,6 +149,7 @@ const AdminPage = () => {
         )}
       </div>
     </div>
+    
   );
 };
 

@@ -68,7 +68,7 @@ const FloatingTitle = () => {
   const text = "E & T Touch Typing";
   const words = text.split(" ");
   return (
-    <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold mb-2 -mt-6 flex flex-nowrap justify-center gap-x-3 md:gap-x-6 leading-normal select-none whitespace-nowrap">
+    <h1 className="text-4xl sm:text-5xl md:text-7xl font-mali font-bold mb-2 -mt-6 flex flex-nowrap justify-center gap-x-3 md:gap-x-6 leading-normal select-none whitespace-nowrap">
       {words.map((word, wIndex) => (
         <div key={wIndex} className="flex">
           {word.split("").map((char, cIndex) => {
@@ -126,7 +126,7 @@ const WelcomeScreen = ({ onStart }) => {
         {/* Title & Description */}
         <div>
           <FloatingTitle />
-          <p className="text-stone-400 text-xl md:text-2xl font-light tracking-wide mt-4">
+          <p className="text-stone-400 text-xl md:text-2xl font-itim tracking-wide mt-4">
             ฝึกฝนทักษะการพิมพ์สัมผัสของคุณให้{" "}
             <span className="text-orange-400 font-bold">เร็ว</span> และ{" "}
             <span className="text-lime-400 font-bold">แม่นยำ</span>
@@ -148,7 +148,7 @@ const WelcomeScreen = ({ onStart }) => {
             }}
           />
 
-          <span className="relative flex items-center gap-3 z-10 font-medium">
+          <span className="relative flex items-center gap-3 z-10 font-niramit">
             เข้าสู่หน้าฝึกพิมพ์{" "}
             <ArrowRight
               className="group-hover:translate-x-1 transition-transform"
@@ -157,7 +157,7 @@ const WelcomeScreen = ({ onStart }) => {
           </span>
         </button>
 
-        <p className="text-stone-500 text-lg font-medium mt-8">
+        <p className="text-stone-500 text-lg font-itim mt-8">
           พัฒนาทักษะการพิมพ์ ไทย & อังกฤษ
         </p>
       </div>
