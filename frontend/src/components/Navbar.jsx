@@ -39,7 +39,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 w-full flex justify-between items-center px-6 py-5 z-50 bg-[#1c1917] border-b border-[#f97316]">
+    <nav className=" top-0 left-0 w-full flex justify-between items-center px-6 py-5 z-50 bg-[#1c1917] border-b border-[#f97316]">
       {/* 1. Logo ด้านซ้าย */}
       <Link
         to="/"

@@ -158,13 +158,13 @@ const SandboxPage = () => {
   }, [isGameActive, showSummary, userInput, targetText, addFloater]);
 
   return (
-    <div className="w-full min-h-screen bg-stone-950 text-orange-50 font-sans flex flex-col relative overflow-hidden pt-24">
+    <div className="w-full min-h-screen bg-stone-950 text-orange-50 font-sans flex flex-col relative overflow-hidden pt-20">
       {/* Background Effects */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
         <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-orange-600/10 rounded-full blur-[120px]"></div>
       </div>
 
-      <Navbar />
+      
       
       {/* ✅ จุดที่แก้ไข: เพิ่ม mt-8 (ดันลงมา) และ z-20 (ให้อยู่เหนือ layer อื่น)
          เปลี่ยนจาก pt-4 เป็น pt-8 หรือ mt-8 เพื่อหนี Navbar 

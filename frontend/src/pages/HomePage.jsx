@@ -103,7 +103,7 @@ const HomePage = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col relative overflow-hidden font-sans">
+    <div className="h-full flex flex-col bg-[#0a0a0a] text-white  relative overflow-hidden font-sans">
       {/* --- Layer 1: Welcome Screen Overlay --- */}
       {showWelcome && <WelcomeScreen onStart={handleStartGame} />}
 
@@ -111,7 +111,7 @@ const HomePage = () => {
       <div className="absolute top-[-10%] left-1/2 transform -translate-x-1/2 w-[800px] h-[500px] bg-orange-900/20 rounded-full blur-[120px] pointer-events-none" />
 
       {/* --- Layer 3: Main Content --- */}
-      <main className="flex-1 flex flex-col items-center justify-center px-4 mt-10 z-10">
+      <main className="flex flex-col  items-center justify-center relative z-10 p-20">
         <HeroSection />
 
         {/* Mode Selection Grid */}
