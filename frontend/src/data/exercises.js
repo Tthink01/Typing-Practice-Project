@@ -17,8 +17,8 @@ export const EXERCISES_DATA = {
       { id: 1, title: "Level 1", sub: "Home Row" },
       { id: 2, title: "Level 2", sub: "Top Row" },
       { id: 3, title: "Level 3", sub: "Bottom Row" },
-      { id: 4, title: "Level 4", sub: "Mixed Rows" },
-      { id: 5, title: "Level 5", sub: "Simple Words" }
+      { id: 4, title: "Level 4", sub: "Numbered Row" },
+      { id: 5, title: "Level 5", sub: "All Rows " }
     ]
   },
   pro: {
