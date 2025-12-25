@@ -13,7 +13,7 @@ export const GAME_MODES = [
     title: 'ฝึกฝนระดับใช้ได้',
     level: "PRO LEVEL",
     description: "เป้าหมาย 30-50 คำ/นาที และ ต้องเล่นให้ได้ 90% เพื่อผ่านรอบ",
-    isLocked: true,
+    isLocked: false,
    
   }
 ];

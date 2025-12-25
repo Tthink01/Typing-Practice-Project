@@ -27,7 +27,7 @@ const ModeCard = ({ title, level, description, isLocked, helpText }) => {
       };
 
   return (
-    <div className={`group relative w-[380px] h-[480px] bg-stone-900/60 backdrop-blur-md border rounded-[2.5rem] p-8 flex flex-col justify-between overflow-hidden transition-all duration-300 ${theme.border}`}>
+    <div className={`group relative w-[380px] h-[400px] bg-stone-900/60 backdrop-blur-md border rounded-[2.5rem] p-8 flex flex-col justify-between overflow-hidden transition-all duration-300 ${theme.border}`}>
       
       {/* --- 1. Background Gradient Effect (เหมือน CourseCard) --- */}
       <div className={`absolute inset-0 bg-gradient-to-br  ${theme.bgGradient} opacity-0  ${!isLocked && 'group-hover:opacity-100'} transition-opacity duration-500`} />

@@ -111,7 +111,7 @@ const HomePage = () => {
       <div className="absolute top-[-10%] left-1/2 transform -translate-x-1/2 w-[800px] h-[500px] bg-orange-900/20 rounded-full blur-[120px] pointer-events-none" />
 
       {/* --- Layer 3: Main Content --- */}
-      <main className="flex flex-col  items-center justify-center relative z-10 p-20">
+      <main className="flex flex-col  items-center justify-center relative z-10 p-30">
         <HeroSection />
 
         {/* Mode Selection Grid */}

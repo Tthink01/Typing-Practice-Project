@@ -7,8 +7,8 @@ import LoginPage from "./pages/LoginPage";
 import AdminPage from "./pages/AdminPage";
 import SandboxPage from "./pages/SandboxPage";
 import Navbar from "./components/Navbar";
-import GamePage from './pages/GamePage'; // ✅ Import มาใหม่
-// import GamePage from './pages/GamePage'; // (ถ้ามี)
+import PracticePage from './pages/PracticePage'; 
+
 
 function App() {
   return (
@@ -28,7 +28,7 @@ function App() {
 
         <Route path="/Sandbox" element={<SandboxPage />} />
         
-        <Route path="/game/:mode/:levelId" element={<GamePage />} />
+        <Route path="/game/:mode/:levelId" element={<PracticePage />} />
         
         
 
