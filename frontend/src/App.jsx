@@ -8,12 +8,14 @@ import AdminPage from "./pages/AdminPage";
 import SandboxPage from "./pages/SandboxPage";
 import Navbar from "./components/Navbar";
 import PracticePage from './pages/PracticePage'; 
+import AdminTools from './components/Admin/AdminTools'; 
 
 
 function App() {
   return (
     <BrowserRouter>
     <Navbar />
+    <AdminTools />
       <Routes>
         {/* หน้าหลัก */}
         <Route path="/" element={<HomePage />} />

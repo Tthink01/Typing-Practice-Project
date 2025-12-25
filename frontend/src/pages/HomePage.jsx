@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 // --- Components ---
 import ModeCard from "../components/ModeCard";
 import WelcomeScreen from "./WelcomePage";
-import LevelSelectModal from "../components/LevelSelectModal";
+import LevelSelectModal from "../components/LevelSelectModal"; // หรือ path ที่คุณเก็บไฟล์ index ของ Shared
 import HeroSection from "../components/Home/HeroSection";
 
 // --- Data ---
@@ -18,12 +18,10 @@ const useWelcomeLogic = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // State เริ่มต้น: เช็คจาก Session ว่าเคยดูหรือยัง
   const [showWelcome, setShowWelcome] = useState(() => {
     return !sessionStorage.getItem("hasSeenWelcome");
   });
 
-  // Effect: ดักจับการเปลี่ยนหน้า (Navigation State)
   useEffect(() => {
     if (location.state?.forceShowWelcome) {
       setTimeout(() => setShowWelcome(true), 0);
@@ -34,7 +32,6 @@ const useWelcomeLogic = () => {
     }
   }, [location.state]);
 
-  // Handler: เมื่อกดปุ่ม Start ในหน้า Welcome
   const handleStartGame = useCallback(() => {
     navigate("/", { state: { forceShowContent: true }, replace: true });
   }, [navigate]);
@@ -47,30 +44,79 @@ const useWelcomeLogic = () => {
 // ==========================================
 const useGameFlow = () => {
   const navigate = useNavigate();
-  const [activeModal, setActiveModal] = useState(null); // 'basic', 'pro', or null
+  const [activeModal, setActiveModal] = useState(null);
   const [practiceLanguage, setPracticeLanguage] = useState("TH");
 
-  // Logic: เช็คว่าเลเวลปลดล็อคหรือยัง (Mockup)
-  const isLevelUnlocked = () => true;
+  // ✅ แก้ไขตรงนี้: ย้าย Logic การเช็ค User มาใส่ใน useState โดยตรง
+  const [userProgress,] = useState(() => {
+    // 1. อ่านค่าจาก LocalStorage ทันทีที่หน้าเว็บโหลด
+    const storedUser = localStorage.getItem("currentUser");
 
-  // Handler: เมื่อคลิกการ์ดเลือกโหมด
+    if (storedUser) {
+      // 🟢 กรณีมี User: ให้ Return ค่า Progress ของ User นั้นออกไปเลย
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        console.log("Logged in as:", parsedUser.username);
+
+        // Mock Data สำหรับคนล็อกอิน (ในอนาคตเปลี่ยนเป็น parsedUser.progress)
+        return {
+          basic: { highestPassedLevel: 2, scores: { 1: 3, 2: 2 } },
+          pro: { highestPassedLevel: 0, scores: {} },
+        };
+      } catch  {
+        // กัน Error กรณี JSON พัง
+        return {
+          basic: { highestPassedLevel: 0, scores: {} },
+          pro: { highestPassedLevel: 0, scores: {} },
+        };
+      }
+    } else {
+      // 🔴 กรณีไม่มี User: Return ค่าเริ่มต้น (ล็อกหมด)
+      return {
+        basic: { highestPassedLevel: 0, scores: {} },
+        pro: { highestPassedLevel: 0, scores: {} },
+      };
+    }
+  });
+
+  // ... (ฟังก์ชัน isLevelUnlocked และอื่นๆ เหมือนเดิม) ...
+  const isLevelUnlocked = (levelId) => {
+    if (!activeModal) return false;
+    const currentModeProgress = userProgress[activeModal] || {
+      highestPassedLevel: 0,
+    };
+    return levelId <= currentModeProgress.highestPassedLevel + 1;
+  };
+
+  // ✅ (Optional) ถ้าอยากให้คนไม่ล็อกอิน "กดเลือกโหมดไม่ได้เลย" ให้แก้ตรงนี้
   const handleCardClick = (mode) => {
     if (mode.isLocked) return;
 
+    // เช็คก่อนว่าล็อกอินไหม?
+    const storedUser = localStorage.getItem("currentUser");
+    if (!storedUser && (mode.id === "basic" || mode.id === "pro")) {
+      if (
+        window.confirm(
+          "กรุณาเข้าสู่ระบบก่อนเริ่มเล่นเกม\nต้องการไปหน้าเข้าสู่ระบบหรือไม่?"
+        )
+      ) {
+        navigate("/login");
+      }
+      return;
+    }
+
     if (mode.id === "basic" || mode.id === "pro") {
-      setActiveModal(mode.id); // เปิด Modal
+      setActiveModal(mode.id);
     } else {
-      navigate(mode.path); // ไปหน้าอื่นทันที (เช่น Sandbox)
+      navigate(mode.path);
     }
   };
 
-  // Handler: เมื่อกดเริ่มเกมจากใน Modal
   const handleLevelStart = (levelId) => {
     if (activeModal && levelId) {
       navigate(`/game/${activeModal}/${levelId}`);
-      setActiveModal(null); // ปิด Modal
+      setActiveModal(null);
     }
-    // navigate(`/game/${activeModal}/${levelId}`); // รอเปิดใช้งาน
   };
 
   return {
@@ -81,14 +127,16 @@ const useGameFlow = () => {
     isLevelUnlocked,
     handleCardClick,
     handleLevelStart,
+    userProgress,
   };
 };
+
+// ... (ส่วน Component HomePage เหมือนเดิม)
 
 // ==========================================
 // 3. Main Component: ส่วนแสดงผล (UI Only)
 // ==========================================
 const HomePage = () => {
-  // เรียกใช้ Logic จาก Hooks
   const { showWelcome, handleStartGame } = useWelcomeLogic();
   const {
     activeModal,
@@ -98,12 +146,13 @@ const HomePage = () => {
     isLevelUnlocked,
     handleCardClick,
     handleLevelStart,
+    userProgress, // รับค่ามา
   } = useGameFlow();
 
   const navigate = useNavigate();
 
   return (
-    <div className="h-full flex flex-col bg-[#0a0a0a] text-white  relative overflow-hidden font-sans">
+    <div className="h-full flex flex-col bg-[#0a0a0a] text-white relative overflow-hidden font-sans">
       {/* --- Layer 1: Welcome Screen Overlay --- */}
       {showWelcome && <WelcomeScreen onStart={handleStartGame} />}
 
@@ -111,7 +160,7 @@ const HomePage = () => {
       <div className="absolute top-[-10%] left-1/2 transform -translate-x-1/2 w-[800px] h-[500px] bg-orange-900/20 rounded-full blur-[120px] pointer-events-none" />
 
       {/* --- Layer 3: Main Content --- */}
-      <main className="flex flex-col  items-center justify-center relative z-10 p-30">
+      <main className="flex flex-col items-center justify-center relative z-10 p-30">
         <HeroSection />
 
         {/* Mode Selection Grid */}
@@ -139,12 +188,11 @@ const HomePage = () => {
       </main>
 
       {/* --- Layer 4: Floating UI Elements --- */}
-      {/* Right Arrow (Desktop Only) */}
       <div className="absolute right-4 top-1/2 transform -translate-y-1/2 hidden md:block z-20">
         <button
-          onClick={() => navigate("/sandbox")} // ✅ เพิ่มบรรทัดนี้
-          className="p-3 bg-[#1a1a1a] border border-gray-800 rounded-lg hover:border-orange-500 text-orange-500 transition-colors shadow-lg cursor-pointer" // เพิ่ม cursor-pointer เพื่อความชัวร์
-          title="ไปโหมดพิมพ์อิสระ" // (Optional) เพิ่ม tooltip บอกผู้ใช้หน่อยก็ดีครับ
+          onClick={() => navigate("/sandbox")}
+          className="p-3 bg-[#1a1a1a] border border-gray-800 rounded-lg hover:border-orange-500 text-orange-500 transition-colors shadow-lg cursor-pointer"
+          title="ไปโหมดพิมพ์อิสระ"
         >
           ❯
         </button>
@@ -165,7 +213,10 @@ const HomePage = () => {
         }
         language={practiceLanguage}
         setLanguage={setPracticeLanguage}
+        // ✅ 3. ส่งฟังก์ชัน Logic ที่แก้ไขแล้วเข้าไป
         isLevelUnlocked={isLevelUnlocked}
+        // ✅ 4. ส่งข้อมูลคะแนน (Passed count) เข้าไปแสดงผล
+        progress={activeModal ? userProgress[activeModal]?.scores : {}}
         onSelect={handleLevelStart}
       />
     </div>
