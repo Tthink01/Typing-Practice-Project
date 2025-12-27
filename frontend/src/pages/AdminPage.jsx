@@ -3,27 +3,62 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 
-
 const AdminPage = () => {
   const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true); // เพิ่มสถานะ Loading
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // ฟังก์ชันนี้ใช้เรียกเมื่อ user ลบ/แก้ไข เราอยาก reuse ได้
+  // --- Helper: ฟังก์ชันแปลง Progress Object เป็นข้อความสวยๆ ---
+  const formatProgress = (progress) => {
+    if (!progress) return <span className="text-gray-600">- No Data -</span>;
+
+    const basicPassed = progress.basic?.highestPassedLevel || 0;
+    const proPassed = progress.pro?.highestPassedLevel || 0;
+
+    const basicCurrent = basicPassed + 1;
+    const proCurrent = proPassed + 1;
+
+    return (
+      <div className="flex flex-col gap-1 text-xs">
+        {/* Basic Mode */}
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-lime-500"></span>
+          <span className="text-lime-400 font-bold">Basic:</span>
+          {/* แสดงผลเป็นด่านปัจจุบัน */}
+          <span className="text-white font-mono">
+            Current Lv. {basicCurrent}
+          </span>
+
+          {/* (Optional) วงเล็บเล็กๆ บอกว่าผ่านไปกี่ด่าน เผื่อ Admin อยากรู้ละเอียด */}
+          <span className="text-gray-500 text-[10px]">
+            (Passed: {basicPassed})
+          </span>
+        </div>
+
+        {/* Pro Mode */}
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+          <span className="text-amber-400 font-bold">Pro:</span>
+          <span className="text-white font-mono">Current Lv. {proCurrent}</span>
+          <span className="text-gray-500 text-[10px]">
+            (Passed: {proPassed})
+          </span>
+        </div>
+      </div>
+    );
+  };
+
   const fetchUsers = useCallback(async (signal) => {
-  try {
-    // ส่ง signal ไปด้วย เพื่อบอกว่า "ถ้าฉันสั่งยกเลิก ให้หยุดโหลดทันที"
-    const res = await axios.get("http://localhost:3001/users", { signal });
-    setUsers(res.data);
-  } catch (err) {
-    // ถ้า Error เพราะเราสั่งยกเลิกเอง (เปลี่ยนหน้า) ไม่ต้องแจ้งเตือน Error
-    if (axios.isCancel && axios.isCancel(err)) return;
-    console.error("Error fetching users:", err);
-  }
-}, []);
+    try {
+      const res = await axios.get("http://localhost:3001/users", { signal });
+      setUsers(res.data);
+    } catch (err) {
+      if (axios.isCancel && axios.isCancel(err)) return;
+      console.error("Error fetching users:", err);
+    }
+  }, []);
 
   useEffect(() => {
-    // 1. เช็คสิทธิ์ Admin (เหมือนเดิม)
     const currentUser = JSON.parse(localStorage.getItem("currentUser"));
 
     if (!currentUser || currentUser.role !== "admin") {
@@ -32,11 +67,9 @@ const AdminPage = () => {
       return;
     }
 
-    // 2. สร้างตัวตัดสัญญาณ (Controller)
     const controller = new AbortController();
     let mounted = true;
 
-    // 3. ฟังก์ชันเรียกข้อมูล (เขียนแบบ IIFE เพราะ useEffect ห้ามเป็น async โดยตรง)
     (async () => {
       setLoading(true);
       try {
@@ -46,19 +79,16 @@ const AdminPage = () => {
       }
     })();
 
-    // 4. Cleanup Function (ทำงานเมื่อเปลี่ยนหน้า)
     return () => {
       mounted = false;
       controller.abort();
     };
   }, [fetchUsers, navigate]);
 
-  // ... ลบ หรือ แก้ไข ...
   const handleDelete = async (id) => {
     if (window.confirm("คุณแน่ใจไหมว่าจะลบ User นี้?")) {
       try {
         await axios.delete(`http://localhost:3001/users/${id}`);
-        // รีโหลดข้อมูล (เรียก fetchUsers อีกครั้ง)
         await fetchUsers();
       } catch (err) {
         console.error("Error deleting user:", err);
@@ -84,7 +114,6 @@ const AdminPage = () => {
   };
 
   return (
-    
     <div className="min-h-screen bg-[#0a0a0a] text-white font-sans">
       <Navbar />
 
@@ -94,7 +123,9 @@ const AdminPage = () => {
         </h1>
 
         {loading ? (
-          <div>Loading...</div> // ถ้า loading=true ให้โชว์คำนี้
+          <div className="text-center text-gray-500 animate-pulse">
+            Loading users data...
+          </div>
         ) : (
           <div className="overflow-x-auto bg-[#1a1a1a] rounded-xl border border-gray-800 shadow-xl">
             <table className="w-full text-left">
@@ -102,7 +133,9 @@ const AdminPage = () => {
                 <tr>
                   <th className="px-6 py-4">Username</th>
                   <th className="px-6 py-4">Role</th>
-                  <th className="px-6 py-4">Password (Database)</th>
+                  {/* ✅ เพิ่มหัวตาราง Progress */}
+                  <th className="px-6 py-4">Game Progress</th>
+                  <th className="px-6 py-4">Password (DB)</th>
                   <th className="px-6 py-4 text-center">Actions</th>
                 </tr>
               </thead>
@@ -112,31 +145,42 @@ const AdminPage = () => {
                     key={user._id}
                     className="hover:bg-[#202020] transition-colors"
                   >
-                    <td className="px-6 py-4 font-medium">{user.username}</td>
+                    <td className="px-6 py-4 font-medium text-lg text-white">
+                      {user.username}
+                    </td>
                     <td className="px-6 py-4">
                       <span
-                        className={`px-2 py-1 rounded text-xs ${
+                        className={`px-2 py-1 rounded text-xs font-bold ${
                           user.role === "admin"
-                            ? "bg-purple-900 text-purple-200"
-                            : "bg-gray-700 text-gray-300"
+                            ? "bg-purple-900/50 text-purple-200 border border-purple-700"
+                            : "bg-gray-800 text-gray-300 border border-gray-700"
                         }`}
                       >
                         {user.role}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-gray-500 font-mono text-sm">
+
+                    {/* ✅ ส่วนแสดงผล Progress */}
+                    <td className="px-6 py-4">
+                      {formatProgress(user.progress)}
+                    </td>
+
+                    <td
+                      className="px-6 py-4 text-gray-600 font-mono text-xs truncate max-w-[100px]"
+                      title={user.password}
+                    >
                       {user.password}
                     </td>
                     <td className="px-6 py-4 flex justify-center gap-3">
                       <button
                         onClick={() => handleEditPassword(user._id)}
-                        className="text-blue-400 hover:text-blue-300 text-sm"
+                        className="px-3 py-1 bg-blue-900/30 text-blue-400 hover:bg-blue-900/50 rounded border border-blue-900 transition-colors text-xs"
                       >
-                        แก้ไขรหัส
+                        เปลี่ยนรหัส
                       </button>
                       <button
                         onClick={() => handleDelete(user._id)}
-                        className="text-red-400 hover:text-red-300 text-sm"
+                        className="px-3 py-1 bg-red-900/30 text-red-400 hover:bg-red-900/50 rounded border border-red-900 transition-colors text-xs"
                       >
                         ลบ
                       </button>
@@ -149,7 +193,6 @@ const AdminPage = () => {
         )}
       </div>
     </div>
-    
   );
 };
 

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import axios from "axios"; // ✅ 1. เพิ่ม axios เข้ามา
 import { EXERCISES_DATA } from "../data/exercises";
 
 export const useTypingGame = (mode, levelId) => {
@@ -10,7 +11,7 @@ export const useTypingGame = (mode, levelId) => {
     const currentLevelData = EXERCISES_DATA?.[mode]?.["TH"]?.find(
       (l) => l.id === parseInt(levelId, 10)
     );
-    
+
     if (!currentLevelData?.content) return "ไม่พบข้อมูลด่าน";
     if (Array.isArray(currentLevelData.content)) {
       return currentLevelData.content[0];
@@ -19,7 +20,7 @@ export const useTypingGame = (mode, levelId) => {
   }, [mode, levelId]);
 
   // --- States ---
-  const [targetText, ] = useState(() => getLevelContent());
+  const [targetText] = useState(() => getLevelContent());
   const [userInput, setUserInput] = useState("");
   const [isGameActive, setIsGameActive] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
@@ -29,7 +30,11 @@ export const useTypingGame = (mode, levelId) => {
   const [floaters, setFloaters] = useState([]);
   const [showSummary, setShowSummary] = useState(false);
   const [finalStats, setFinalStats] = useState({
-    wpm: 0, accuracy: 0, wrongKeys: [], fastestKey: "-", slowestKey: "-",
+    wpm: 0,
+    accuracy: 0,
+    wrongKeys: [],
+    fastestKey: "-",
+    slowestKey: "-",
   });
 
   // --- Refs ---
@@ -51,7 +56,7 @@ export const useTypingGame = (mode, levelId) => {
     wrongKeysRef.current = new Set();
     setFloaters([]);
     startTimeRef.current = null;
-    
+
     setTimeout(() => inputRef.current?.focus(), 50);
   }, [TIME_LIMIT]);
 
@@ -93,16 +98,55 @@ export const useTypingGame = (mode, levelId) => {
 
       setPassedCount((prev) => {
         const newPassed = prev + 1;
+
+        // ถ้าผ่านครบตามเป้า (3 รอบ)
         if (newPassed >= PASS_TARGET) {
           setFinalStats(stats);
+
+          // -------------------------------------------------------------
+          // ✅ 2. เพิ่ม Logic บันทึก Progress ลง Database ตรงนี้
+          // -------------------------------------------------------------
+          const storedUser = localStorage.getItem("currentUser");
+          if (storedUser) {
+            try {
+              const user = JSON.parse(storedUser);
+
+              // ยิง API (เช็ค URL ให้ตรงกับ Routes ที่ตั้งไว้ใน Backend)
+              // สมมติว่า Backend คุณเปิด Port 3001 และ Route คือ /users/progress
+              axios
+                .post("http://localhost:3001/users/progress", {
+                  userId: user._id, // ส่ง ID ของ user ไป
+                  mode: mode, // 'basic' หรือ 'pro'
+                  levelId: parseInt(levelId), // ส่งเลขด่าน
+                  score: stats.wpm, // ส่งคะแนนไปด้วย (ถ้า backend รับ)
+                })
+                .then((res) => {
+                  console.log("Progress Saved:", res.data);
+
+                  // อัปเดตข้อมูลใน LocalStorage ทันที (เพื่อให้หน้า Home รู้ว่าปลดล็อกแล้ว)
+                  if (res.data.progress) {
+                    user.progress = res.data.progress;
+                    localStorage.setItem("currentUser", JSON.stringify(user));
+                  }
+                })
+                .catch((err) => {
+                  console.error("Failed to save progress:", err);
+                });
+            } catch (e) {
+              console.error("Error parsing user data:", e);
+            }
+          }
+          // -------------------------------------------------------------
+
           setTimeout(() => setShowSummary(true), 500);
         } else {
+          // ถ้ายังไม่ครบ ให้เล่นรอบถัดไป
           setTimeout(() => resetRound(), 800);
         }
         return newPassed;
       });
     },
-    [PASS_TARGET, resetRound]
+    [PASS_TARGET, resetRound, mode, levelId] // ✅ เพิ่ม dependencies ที่จำเป็น
   );
 
   const addFloater = useCallback((char, index, isCorrect) => {
@@ -129,14 +173,15 @@ export const useTypingGame = (mode, levelId) => {
       startTimeRef.current = now;
     }
 
-    if (val.length < userInput.length) return; 
+    if (val.length < userInput.length) return;
 
     if (val.length <= targetText.length) {
       if (val.length > userInput.length) {
         const char = val.slice(-1);
         const index = val.length - 1;
         const targetChar = targetText[index];
-        const duration = lastKeyTime.current === 0 ? 0 : now - lastKeyTime.current;
+        const duration =
+          lastKeyTime.current === 0 ? 0 : now - lastKeyTime.current;
 
         if (!keyTimes.current[char]) keyTimes.current[char] = [];
         keyTimes.current[char].push(duration);
@@ -154,7 +199,7 @@ export const useTypingGame = (mode, levelId) => {
         const elapsedSeconds = TIME_LIMIT - timeLeft;
         const elapsedMin = Math.max(elapsedSeconds / 60, 1 / 60);
         const currentWpm = Math.round(val.length / 5 / elapsedMin);
-        
+
         let correctChars = 0;
         for (let i = 0; i < val.length; i++) {
           if (val[i] === targetText[i]) correctChars++;
@@ -190,12 +235,12 @@ export const useTypingGame = (mode, levelId) => {
     PASS_TARGET,
     TIME_LIMIT,
     inputRef,
-    
+
     // Actions
     handleInputChange,
     setIsComposing,
     resetRound,
     setShowSummary,
-    removeFloater
+    removeFloater,
   };
 };

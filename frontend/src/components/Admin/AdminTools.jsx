@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion"; // eslint-disable-line no-unused-vars
-// import { motion ,AnimatePresence} from "motion/react"
-import { ShieldAlert, Unlock, X, Minimize2, Move } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";  // eslint-disable-line no-unused-vars
+import { useNavigate } from "react-router-dom"; // ✅ 1. Import useNavigate
+import { ShieldAlert, Unlock, Minimize2, Move, LayoutDashboard } from "lucide-react"; // ✅ 2. Import Icon Dashboard
 
 const AdminTools = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState(null);
+  
+  // ✅ 3. เรียกใช้ Hook navigate
+  const navigate = useNavigate();
   
   // State สำหรับฟอร์มปลดล็อก
   const [targetMode, setTargetMode] = useState("basic");
@@ -30,7 +33,6 @@ const AdminTools = () => {
   }, []);
 
   // --- 2. ถ้าไม่ใช่ Admin ให้ Return Null (ไม่แสดงผลเลย) ---
-  // เช็ค role ตาม Schema: { type: String, default: 'user' }
   if (!user || user.role !== "admin") {
     return null;
   }
@@ -39,9 +41,6 @@ const AdminTools = () => {
   const handleUnlock = () => {
     if (window.confirm(`ยืนยันปลดล็อก ${targetMode.toUpperCase()} Level ${targetLevel} ?`)) {
       // TODO: ยิง API ไป Backend ตรงนี้
-      // axios.post('/api/levels/unlock', { userId: user.id, mode: targetMode, level: targetLevel })
-      
-      // ตัวอย่างจำลองการปลดล็อก (Mock)
       console.log(`[ADMIN ACTION] Unlocked: ${targetMode} - ${targetLevel}`);
       
       // Feedback
@@ -113,6 +112,20 @@ const AdminTools = () => {
                   </button>
                 </div>
               </div>
+
+              {/* ✅ 4. เพิ่มปุ่มไปหน้า Admin Page */}
+              <button
+                onClick={() => {
+                    navigate("/admin"); // เปลี่ยน path นี้ให้ตรงกับ Route จริงของคุณ (เช่น /admin หรือ /dashboard)
+                    setIsOpen(false);   // ปิด Panel เมื่อกด
+                }}
+                className="w-full mb-4 bg-stone-800 hover:bg-stone-700 hover:text-orange-400 text-stone-300 border border-stone-600 border-dashed py-2 rounded-lg transition-all flex items-center justify-center gap-2 font-bold text-sm"
+              >
+                <LayoutDashboard size={16} />
+                Open Dashboard
+              </button>
+
+              <div className="h-px bg-stone-800 w-full mb-4"></div>
 
               {/* Content: Unlock Form */}
               <div className="space-y-3">

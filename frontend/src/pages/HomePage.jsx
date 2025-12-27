@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import axios from "axios";
 
 // --- Components ---
 import ModeCard from "../components/ModeCard";
@@ -48,36 +49,53 @@ const useGameFlow = () => {
   const [practiceLanguage, setPracticeLanguage] = useState("TH");
 
   // ✅ แก้ไขตรงนี้: ย้าย Logic การเช็ค User มาใส่ใน useState โดยตรง
-  const [userProgress,] = useState(() => {
-    // 1. อ่านค่าจาก LocalStorage ทันทีที่หน้าเว็บโหลด
-    const storedUser = localStorage.getItem("currentUser");
-
-    if (storedUser) {
-      // 🟢 กรณีมี User: ให้ Return ค่า Progress ของ User นั้นออกไปเลย
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        console.log("Logged in as:", parsedUser.username);
-
-        // Mock Data สำหรับคนล็อกอิน (ในอนาคตเปลี่ยนเป็น parsedUser.progress)
-        return {
-          basic: { highestPassedLevel: 2, scores: { 1: 3, 2: 2 } },
-          pro: { highestPassedLevel: 0, scores: {} },
-        };
-      } catch  {
-        // กัน Error กรณี JSON พัง
-        return {
-          basic: { highestPassedLevel: 0, scores: {} },
-          pro: { highestPassedLevel: 0, scores: {} },
-        };
-      }
-    } else {
-      // 🔴 กรณีไม่มี User: Return ค่าเริ่มต้น (ล็อกหมด)
-      return {
-        basic: { highestPassedLevel: 0, scores: {} },
-        pro: { highestPassedLevel: 0, scores: {} },
-      };
-    }
+  const [userProgress, setUserProgress] = useState({
+    basic: { highestPassedLevel: 0, scores: {} },
+    pro: { highestPassedLevel: 0, scores: {} },
   });
+
+  // ✅ เพิ่ม useEffect: เช็คว่า User ยัง valid อยู่ไหม หรือ Server เปิดอยู่ไหม
+  useEffect(() => {
+    const checkUserStatus = async () => {
+      const storedUser = localStorage.getItem("currentUser");
+
+      if (storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+
+          // ยิงไปถาม Server: "เฮ้ย User ID นี้ยังมีตัวตนไหม?"
+          const res = await axios.get(
+            `http://localhost:3001/users/${parsedUser._id}`
+          );
+
+          if (res.data.status === "Success") {
+            // 🟢 Server ตอบกลับมาว่ามีตัวตน -> อัปเดต Progress ล่าสุดจาก DB เลย
+            const realUser = res.data.user;
+            if (realUser.progress) {
+              setUserProgress(realUser.progress);
+            }
+            // (Optional) อัปเดต localStorage ให้สดใหม่เสมอ
+            localStorage.setItem("currentUser", JSON.stringify(realUser));
+          }
+        } catch (err) {
+          // 🔴 กรณีเกิด Error (เช่น ปิด Server อยู่ หรือ User โดนลบไปแล้ว)
+          console.error("Server check failed:", err);
+
+          // ล้างข้อมูลทิ้ง -> ถือว่าไม่ได้ล็อกอิน
+          localStorage.removeItem("currentUser");
+          setUserProgress({
+            basic: { highestPassedLevel: 0, scores: {} },
+            pro: { highestPassedLevel: 0, scores: {} },
+          });
+
+          // (Optional) ถ้าอยากให้เด้งไปหน้า Login เลย ให้เปิดบรรทัดล่าง
+          // navigate("/login");
+        }
+      }
+    };
+
+    checkUserStatus();
+  }, []); // ทำงานครั้งเดียวตอนโหลดหน้า
 
   // ... (ฟังก์ชัน isLevelUnlocked และอื่นๆ เหมือนเดิม) ...
   const isLevelUnlocked = (levelId) => {

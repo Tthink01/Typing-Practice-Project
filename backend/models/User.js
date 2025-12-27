@@ -1,12 +1,26 @@
 // server/models/User.js
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const UserSchema = new mongoose.Schema({
-    
-    password: { type: String, required: true }, // ในงานจริงต้องเข้ารหัส (Hash) นะครับ
-    username: { type: String, required: true },
-    role: { type: String, default: 'user' }
+  // ✅ เพิ่ม unique: true เพื่อไม่ให้สมัครชื่อซ้ำ
+  username: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  role: { type: String, default: "user" },
+
+  progress: {
+    basic: {
+      highestPassedLevel: { type: Number, default: 0 },
+      // ✅ เพิ่ม default: {} กัน Error
+      scores: { type: Map, of: Number, default: {} },
+    },
+    pro: {
+      highestPassedLevel: { type: Number, default: 0 },
+      // ✅ เพิ่ม default: {} กัน Error
+      scores: { type: Map, of: Number, default: {} },
+    },
+  },
 });
 
-const UserModel = mongoose.model("Users", UserSchema);
+// ปกติใช้ "users" (ชื่อ collection) หรือ "User" (ชื่อ Model)
+const UserModel = mongoose.model("users", UserSchema);
 module.exports = UserModel;
