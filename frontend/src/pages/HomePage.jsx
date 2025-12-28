@@ -11,6 +11,7 @@ import HeroSection from "../components/Home/HeroSection";
 // --- Data ---
 import { GAME_MODES } from "../data/gameMode.js";
 import { EXERCISES_DATA } from "../data/exercises.js";
+import { checkLevelStatus, GAME_CONFIG } from "../utils/gameRule";
 
 // ==========================================
 // 1. Custom Hook: จัดการเรื่อง Welcome Screen
@@ -99,11 +100,25 @@ const useGameFlow = () => {
 
   // ... (ฟังก์ชัน isLevelUnlocked และอื่นๆ เหมือนเดิม) ...
   const isLevelUnlocked = (levelId) => {
+    // 1. ถ้ายังไม่ได้เลือกโหมด (Modal ปิดอยู่)
     if (!activeModal) return false;
-    const currentModeProgress = userProgress[activeModal] || {
+
+    // ✅ 2. แก้จุดนี้: สร้าง Key ให้ตรงกับที่ Backend บันทึก (Mode + Language)
+    // เช่น: activeModal="basic" + practiceLanguage="TH"  =>  "basic_TH"
+    const progressKey = `${activeModal}_${practiceLanguage}`;
+
+    // 3. ดึงข้อมูลจาก Key ใหม่
+    const currentProgress = userProgress[progressKey] || {
       highestPassedLevel: 0,
     };
-    return levelId <= currentModeProgress.highestPassedLevel + 1;
+
+    // 4. ใช้ฟังก์ชันเช็คอันเดิม (Logic การคำนวณถูกต้องแล้ว)
+    const status = checkLevelStatus(
+      levelId,
+      currentProgress.highestPassedLevel
+    );
+
+    return status.isUnlocked;
   };
 
   // ✅ (Optional) ถ้าอยากให้คนไม่ล็อกอิน "กดเลือกโหมดไม่ได้เลย" ให้แก้ตรงนี้
@@ -132,7 +147,11 @@ const useGameFlow = () => {
 
   const handleLevelStart = (levelId) => {
     if (activeModal && levelId) {
-      navigate(`/game/${activeModal}/${levelId}`);
+      // ✅ ส่ง language ไปด้วยผ่าน state (practiceLanguage คือ state ที่เราเลือก TH/EN)
+      navigate(`/game/${activeModal}/${levelId}`, {
+        state: { language: practiceLanguage },
+      });
+
       setActiveModal(null);
     }
   };
@@ -182,7 +201,7 @@ const HomePage = () => {
         <HeroSection />
 
         {/* Mode Selection Grid */}
-        <div className="flex flex-col md:flex-row font-itim gap-6 md:gap-8 justify-center items-center w-full max-w-4xl mt-8">
+        <div className="flex flex-col md:flex-row font-itim gap-6 md:gap-8 justify-center items-center w-full max-w-4xl mt-2">
           {GAME_MODES.map((mode) => (
             <div
               key={mode.id}
@@ -196,7 +215,7 @@ const HomePage = () => {
                 isLocked={mode.isLocked}
                 helpText={
                   mode.id === "basic"
-                    ? "ผู้ใช้ต้องเล่นให้ผ่าน 3/5 รอบ เพื่อปลดล็อคด่านถัดไป🩷"
+                    ? "ผู้ใช้ต้องเล่นให้ผ่าน 0 รอบ เพื่อปลดล็อคด่านถัดไป🩷"
                     : "ต้องเล่นให้ผ่าน 3 ด่าน ของระดับพื้นฐาน เพื่อปลดล็อค ระดับใช้ได้✌🏻❤️"
                 }
               />

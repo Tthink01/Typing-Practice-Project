@@ -1,5 +1,6 @@
 import React from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate,useLocation } from "react-router-dom";
+
 
 // Components
 import Floater from "../components/Shared/Floater";
@@ -14,6 +15,10 @@ import { useTypingGame } from "../hooks/useTypingGame"; // ✅ เรียก�
 const GameContent = () => {
   const { mode, levelId } = useParams();
   const navigate = useNavigate();
+
+  // ✅ 1. รับค่าภาษาที่ส่งมาจาก HomePage
+  const location = useLocation();
+  const language = location.state?.language || "TH"; // ถ้าไม่มีให้ Default เป็น TH
 
   // ✅ เรียก Logic ทั้งหมดจาก Hook บรรทัดเดียวจบ
   const {
@@ -31,7 +36,7 @@ const GameContent = () => {
     resetRound,
     setShowSummary,
     removeFloater
-  } = useTypingGame(mode, levelId);
+  } = useTypingGame(mode, levelId, language);
 
   const progressPercent = targetText.length > 0 ? (userInput.length / targetText.length) * 100 : 0;
 

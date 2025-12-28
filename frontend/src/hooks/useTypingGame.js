@@ -1,14 +1,18 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import axios from "axios"; // ✅ 1. เพิ่ม axios เข้ามา
+import axios from "axios";
 import { EXERCISES_DATA } from "../data/exercises";
+import { GAME_CONFIG } from "../utils/gameRule";
 
-export const useTypingGame = (mode, levelId) => {
-  const PASS_TARGET = 3;
-  const TIME_LIMIT = 30;
+// ✅ 1. เพิ่ม parameter 'language' เข้ามา
+export const useTypingGame = (mode, levelId, language) => {
+  const PASS_TARGET = GAME_CONFIG.PASS_REQUIRED_COUNT;
+  const TIME_LIMIT = GAME_CONFIG.TIME_LIMIT_SEC;
 
   // --- Helpers ---
   const getLevelContent = useCallback(() => {
-    const currentLevelData = EXERCISES_DATA?.[mode]?.["TH"]?.find(
+    // ✅ 2. ใช้ [language] แทนการ Hardcode ["TH"]
+    // จะได้ดึงข้อมูลจาก EXERCISES_DATA.basic.TH หรือ EXERCISES_DATA.basic.EN ตามที่ส่งมา
+    const currentLevelData = EXERCISES_DATA?.[mode]?.[language]?.find(
       (l) => l.id === parseInt(levelId, 10)
     );
 
@@ -17,10 +21,11 @@ export const useTypingGame = (mode, levelId) => {
       return currentLevelData.content[0];
     }
     return currentLevelData.content;
-  }, [mode, levelId]);
+  }, [mode, levelId, language]); // อย่าลืมใส่ language ใน dependency
 
   // --- States ---
-  const [targetText] = useState(() => getLevelContent());
+  // เพิ่ม setTargetText เพื่อให้อัปเดตโจทย์ได้
+  const [targetText, setTargetText] = useState(() => getLevelContent());
   const [userInput, setUserInput] = useState("");
   const [isGameActive, setIsGameActive] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
@@ -46,6 +51,14 @@ export const useTypingGame = (mode, levelId) => {
   const startTimeRef = useRef(null);
 
   // --- Core Logic ---
+
+  // ✅ เพิ่ม Effect: เมื่อเปลี่ยนด่านหรือภาษา ให้โหลดโจทย์ใหม่ทันที
+  useEffect(() => {
+    setTargetText(getLevelContent());
+    resetRound();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [levelId, language, getLevelContent]);
+
   const resetRound = useCallback(() => {
     setUserInput("");
     setIsGameActive(false);
@@ -99,31 +112,31 @@ export const useTypingGame = (mode, levelId) => {
       setPassedCount((prev) => {
         const newPassed = prev + 1;
 
-        // ถ้าผ่านครบตามเป้า (3 รอบ)
+        // ถ้าผ่านครบตามเป้า
         if (newPassed >= PASS_TARGET) {
           setFinalStats(stats);
 
           // -------------------------------------------------------------
-          // ✅ 2. เพิ่ม Logic บันทึก Progress ลง Database ตรงนี้
+          // ✅ 3. Logic บันทึก Progress (อัปเดตให้ส่ง language)
           // -------------------------------------------------------------
           const storedUser = localStorage.getItem("currentUser");
           if (storedUser) {
             try {
               const user = JSON.parse(storedUser);
 
-              // ยิง API (เช็ค URL ให้ตรงกับ Routes ที่ตั้งไว้ใน Backend)
-              // สมมติว่า Backend คุณเปิด Port 3001 และ Route คือ /users/progress
               axios
                 .post("http://localhost:3001/users/progress", {
-                  userId: user._id, // ส่ง ID ของ user ไป
-                  mode: mode, // 'basic' หรือ 'pro'
-                  levelId: parseInt(levelId), // ส่งเลขด่าน
-                  score: stats.wpm, // ส่งคะแนนไปด้วย (ถ้า backend รับ)
+                  userId: user._id,
+                  mode: mode,
+                  language: language, // ✅ ส่งภาษาไปด้วย (TH หรือ EN)
+                  level: parseInt(levelId), // ✅ เปลี่ยนชื่อ key เป็น level ให้ตรงกับ Backend
+                  score: stats.wpm,
+                  wpm: stats.wpm, // ส่ง wpm เพิ่มเผื่อไว้
+                  accuracy: stats.accuracy, // ส่ง accuracy เพิ่มเผื่อไว้
                 })
                 .then((res) => {
                   console.log("Progress Saved:", res.data);
 
-                  // อัปเดตข้อมูลใน LocalStorage ทันที (เพื่อให้หน้า Home รู้ว่าปลดล็อกแล้ว)
                   if (res.data.progress) {
                     user.progress = res.data.progress;
                     localStorage.setItem("currentUser", JSON.stringify(user));
@@ -146,7 +159,7 @@ export const useTypingGame = (mode, levelId) => {
         return newPassed;
       });
     },
-    [PASS_TARGET, resetRound, mode, levelId] // ✅ เพิ่ม dependencies ที่จำเป็น
+    [PASS_TARGET, resetRound, mode, levelId, language] // ✅ เพิ่ม language ใน dependency
   );
 
   const addFloater = useCallback((char, index, isCorrect) => {
@@ -224,7 +237,6 @@ export const useTypingGame = (mode, levelId) => {
   };
 
   return {
-    // Data
     targetText,
     userInput,
     timeLeft,
@@ -235,8 +247,6 @@ export const useTypingGame = (mode, levelId) => {
     PASS_TARGET,
     TIME_LIMIT,
     inputRef,
-
-    // Actions
     handleInputChange,
     setIsComposing,
     resetRound,

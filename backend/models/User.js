@@ -8,15 +8,15 @@ const UserSchema = new mongoose.Schema({
   role: { type: String, default: "user" },
 
   progress: {
-    basic: {
-      highestPassedLevel: { type: Number, default: 0 },
-      // ✅ เพิ่ม default: {} กัน Error
-      scores: { type: Map, of: Number, default: {} },
-    },
-    pro: {
-      highestPassedLevel: { type: Number, default: 0 },
-      // ✅ เพิ่ม default: {} กัน Error
-      scores: { type: Map, of: Number, default: {} },
+    type: Object,
+    default: {
+      // แยก Basic เป็น ไทย / อังกฤษ
+      basic_TH: { highestPassedLevel: 0, scores: {} },
+      basic_EN: { highestPassedLevel: 0, scores: {} },
+
+      // แยก Pro เป็น ไทย / อังกฤษ
+      pro_TH: { highestPassedLevel: 0, scores: {} },
+      pro_EN: { highestPassedLevel: 0, scores: {} },
     },
   },
 });
