@@ -123,7 +123,9 @@ const useGameFlow = () => {
 
   // ✅ (Optional) ถ้าอยากให้คนไม่ล็อกอิน "กดเลือกโหมดไม่ได้เลย" ให้แก้ตรงนี้
   const handleCardClick = (mode) => {
-    if (mode.isLocked) return;
+    if (mode.id === "basic" || mode.id === "pro") {
+      setActiveModal(mode.id);
+    }
 
     // เช็คก่อนว่าล็อกอินไหม?
     const storedUser = localStorage.getItem("currentUser");
@@ -213,6 +215,7 @@ const HomePage = () => {
                 level={mode.level}
                 description={mode.description}
                 isLocked={mode.isLocked}
+                type={mode.id}
                 helpText={
                   mode.id === "basic"
                     ? "ผู้ใช้ต้องเล่นให้ผ่าน 0 รอบ เพื่อปลดล็อคด่านถัดไป🩷"
