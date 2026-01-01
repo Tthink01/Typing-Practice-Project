@@ -50,7 +50,12 @@ const LevelSelectModal = ({
         <div className="space-y-4 overflow-y-auto p-4 -mx-4 custom-scrollbar">
           {exercises && exercises[language] ? exercises[language].map((item) => {
             const unlocked = isLevelUnlocked(item.id);
-            const count = progress[item.id] || 0;
+            
+            // const count = progress[item.id] || 0;
+            const highestPassed = progress?.highestPassedLevel || 0;
+            // const count = item.id <= highestPassed ? 3 : 0;
+            // const isAnimating = pendingUnlock && pendingUnlock.type === type && pendingUnlock.id === item.id;
+            const count = item.id <= highestPassed ? 3 : 0;
             const isAnimating = pendingUnlock && pendingUnlock.type === type && pendingUnlock.id === item.id;
 
             // ✅ Clean Loop: เลือก Component ที่จะแสดงผล

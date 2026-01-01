@@ -253,7 +253,11 @@ const HomePage = () => {
         // ✅ 3. ส่งฟังก์ชัน Logic ที่แก้ไขแล้วเข้าไป
         isLevelUnlocked={isLevelUnlocked}
         // ✅ 4. ส่งข้อมูลคะแนน (Passed count) เข้าไปแสดงผล
-        progress={activeModal ? userProgress[activeModal]?.scores : {}}
+        progress={
+          activeModal
+            ? userProgress[`${activeModal}_${practiceLanguage}`] || {}
+            : {}
+        }
         onSelect={handleLevelStart}
       />
     </div>
