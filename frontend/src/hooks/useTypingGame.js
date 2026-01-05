@@ -4,9 +4,9 @@ import { EXERCISES_DATA } from "../data/exercises";
 import { GAME_CONFIG } from "../utils/gameRule";
 
 export const useTypingGame = (mode, levelId, language) => {
-  // ✅ 1. ดึง Config แบบปลอดภัย (รองรับทั้ง "basic", "Basic", "pro", "Pro")
+  // ✅ 1. ดึง Config แบบปลอดภัย
   const safeMode = mode?.toLowerCase() === "pro" ? "PRO" : "BASIC";
-  const config = GAME_CONFIG[safeMode]; // ดึงเกณฑ์คะแนน (MIN_ACCURACY, MIN_WPM)
+  const config = GAME_CONFIG[safeMode];
 
   const PASS_TARGET = GAME_CONFIG.PASS_REQUIRED_COUNT;
   const TIME_LIMIT = GAME_CONFIG.TIME_LIMIT_SEC;
@@ -18,7 +18,6 @@ export const useTypingGame = (mode, levelId, language) => {
   const [isFinished, setIsFinished] = useState(false);
   const [isComposing, setIsComposing] = useState(false);
   
-  // ตัวนับรอบ (0/3)
   const [passedCount, setPassedCount] = useState(0); 
 
   const [timeLeft, setTimeLeft] = useState(TIME_LIMIT);
@@ -37,24 +36,54 @@ export const useTypingGame = (mode, levelId, language) => {
   const startTimeRef = useRef(null);
 
   // --- Helpers ---
+
+  // 🔥 จุดที่แก้ 1: เพิ่มฟังก์ชันสลับตำแหน่ง (Shuffle)
+  const shuffleArray = (array) => {
+    const newArr = [...array];
+    for (let i = newArr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+    }
+    return newArr;
+  };
+
+  // 🔥 จุดที่แก้ 2: ปรับ Logic การดึงโจทย์ (ตัดคำ + สุ่ม)
   const getLevelContent = useCallback(() => {
-    // ดึงโจทย์ตามภาษา (TH/EN)
     const currentLevelData = EXERCISES_DATA?.[mode]?.[language]?.find(
       (l) => l.id === parseInt(levelId, 10)
     );
     if (!currentLevelData?.content) return "ไม่พบข้อมูลด่าน";
-    return Array.isArray(currentLevelData.content) ? currentLevelData.content[0] : currentLevelData.content;
+
+    // ดึงเนื้อหาดิบออกมา
+    let rawContent = Array.isArray(currentLevelData.content) 
+      ? currentLevelData.content[0] 
+      : currentLevelData.content;
+
+    // แยกคำด้วยช่องว่าง (Space)
+    const wordsArray = rawContent.trim().split(/\s+/);
+
+    // สุ่มลำดับ และ ตัดมาแค่ 15 คำ
+    const shuffledWords = shuffleArray(wordsArray);
+    const selectedWords = shuffledWords.slice(0, 15); 
+
+    // รวมกลับเป็นประโยค string
+    return selectedWords.join(" ");
+
   }, [mode, levelId, language]);
 
   // ✅ 2. รีเซ็ตเกมเมื่อเปลี่ยนด่าน
   useEffect(() => {
-    setTargetText(getLevelContent());
-    setPassedCount(0); // รีเซ็ตตัวนับเป็น 0
+    setTargetText(getLevelContent()); // โหลดโจทย์ครั้งแรก
+    setPassedCount(0);
     resetRound(); 
-  }, [levelId, language, getLevelContent]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [levelId, language]); // เอา getLevelContent ออกจาก dependency array เพื่อกัน loop ถ้าไม่จำเป็น
 
   // ฟังก์ชันรีเซ็ตกระดาน
   const resetRound = useCallback(() => {
+    // 🔥 จุดที่แก้ 3: สั่งให้ Gen โจทย์ใหม่ 15 คำ ทุกครั้งที่รีเซ็ต
+    setTargetText(getLevelContent());
+
     setUserInput("");
     setIsGameActive(false);
     setIsFinished(false);
@@ -66,24 +95,21 @@ export const useTypingGame = (mode, levelId, language) => {
     startTimeRef.current = null;
     
     setTimeout(() => inputRef.current?.focus(), 50);
-  }, [TIME_LIMIT]);
+  }, [TIME_LIMIT, getLevelContent]); // เพิ่ม getLevelContent ใน dependency
 
-  // ✅ 3. Logic จัดการเมื่อตัวเลข passedCount เปลี่ยน (Save หรือ ไปต่อ)
+  // ✅ 3. Logic จัดการเมื่อตัวเลข passedCount เปลี่ยน
   useEffect(() => {
     if (passedCount === 0) return;
 
-    // ถ้าผ่านครบตามเป้า (เช่น 3/3)
     if (passedCount >= PASS_TARGET) {
-      saveProgressToBackend(); // บันทึกข้อมูล
-      setTimeout(() => setShowSummary(true), 500); // แสดงหน้าสรุป
+      saveProgressToBackend();
+      setTimeout(() => setShowSummary(true), 500);
     } else {
-      // ถ้ายังไม่ครบ (เช่น 1/3) -> รีเซ็ตกระดานเล่นต่อ
       setTimeout(() => resetRound(), 800);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [passedCount, PASS_TARGET]);
 
-  // ฟังก์ชันบันทึกข้อมูล (แยกออกมาให้ชัดเจน)
   const saveProgressToBackend = () => {
     const storedUser = localStorage.getItem("currentUser");
     if (!storedUser) return;
@@ -102,7 +128,6 @@ export const useTypingGame = (mode, levelId, language) => {
       })
       .then((res) => {
         console.log("Progress Saved:", res.data);
-        // อัปเดต localStorage เพื่อให้หน้า Home รู้ทันที
         if (res.data.progress) {
           user.progress = res.data.progress;
           localStorage.setItem("currentUser", JSON.stringify(user));
@@ -141,29 +166,25 @@ export const useTypingGame = (mode, levelId, language) => {
     if (!showSummary) inputRef.current?.focus();
   }, [showSummary]);
 
-  // ✅ 4. ฟังก์ชันจบด่าน (หัวใจสำคัญ: ตรวจสอบเกณฑ์)
+  // ✅ 4. ฟังก์ชันจบด่าน
   const handleLevelComplete = useCallback((stats) => {
       setIsGameActive(false);
       setIsFinished(true);
       clearInterval(timerRef.current);
-      setFinalStats(stats); // เก็บสถิติไว้ก่อน
+      setFinalStats(stats);
 
-      // --- LOGIC ตรวจคะแนน (ของจริง) ---
-      // ต้องแม่นยำ >= ค่าที่ตั้งไว้ และ ความเร็ว >= ค่าที่ตั้งไว้
       const isPassCriteria = stats.accuracy >= config.MIN_ACCURACY && stats.wpm >= config.MIN_WPM;
 
       if (!isPassCriteria) {
-        // ❌ ถ้าไม่ผ่าน: แจ้งเตือน + รีเซ็ต + ไม่นับคะแนน
         alert(
             `ไม่ผ่านเกณฑ์! ❌\n` +
             `ความแม่นยำของคุณ: ${stats.accuracy}% (ต้องการ ${config.MIN_ACCURACY}%)\n` +
             `ความเร็วของคุณ: ${stats.wpm} WPM (ต้องการ ${config.MIN_WPM} WPM)`
         );
         setTimeout(() => resetRound(), 1000);
-        return; // 🛑 จบการทำงาน ไม่ไปบรรทัดถัดไป
+        return;
       }
 
-      // 🟢 ถ้าผ่านเกณฑ์: สั่งบวกเลข (เดี๋ยว useEffect ด้านบนจะทำงานต่อเอง)
       console.log("Passed Criteria! Incrementing count...");
       setPassedCount((prev) => prev + 1);
     },
@@ -213,7 +234,6 @@ export const useTypingGame = (mode, levelId, language) => {
       setUserInput(val);
 
       if (val.length === targetText.length) {
-        // คำนวณ Stats
         const elapsedSeconds = TIME_LIMIT - timeLeft;
         const elapsedMin = Math.max(elapsedSeconds / 60, 1 / 60);
         const currentWpm = Math.round(val.length / 5 / elapsedMin);

@@ -34,7 +34,7 @@ const GameContent = () => {
     inputRef,
     handleInputChange,
     resetRound,
-    setShowSummary,
+    // setShowSummary,
     removeFloater
   } = useTypingGame(mode, levelId, language);
 
@@ -57,7 +57,7 @@ const GameContent = () => {
           passedCount={passedCount}
           passTarget={PASS_TARGET}
           timeLeft={timeLeft}
-          onReset={resetRound}
+          onRetry={resetRound}
         />
 
         {/* Game Card */}
@@ -95,14 +95,9 @@ const GameContent = () => {
       {showSummary && (
         <SummaryPopup
           stats={finalStats}
-          onNext={() => {
-            if (passedCount >= PASS_TARGET) {
-              navigate("/");
-            } else {
-              setShowSummary(false);
-              resetRound(); 
-            }
-          }}
+          onRetry={resetRound}
+          onHome={() => navigate('/')}
+          
           isLevelMode={true}
         />
       )}
