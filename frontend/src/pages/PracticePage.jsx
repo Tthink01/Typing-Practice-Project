@@ -19,6 +19,7 @@ const GameContent = () => {
   // ✅ 1. รับค่าภาษาที่ส่งมาจาก HomePage
   const location = useLocation();
   const language = location.state?.language || "TH"; // ถ้าไม่มีให้ Default เป็น TH
+  
 
   // ✅ เรียก Logic ทั้งหมดจาก Hook บรรทัดเดียวจบ
   const {
@@ -32,11 +33,16 @@ const GameContent = () => {
     PASS_TARGET,
     TIME_LIMIT,
     inputRef,
+    isWin,
     handleInputChange,
     resetRound,
     // setShowSummary,
     removeFloater
   } = useTypingGame(mode, levelId, language);
+
+  const handleNextAction = () => {
+    resetRound();
+  };
 
   const progressPercent = targetText.length > 0 ? (userInput.length / targetText.length) * 100 : 0;
 
@@ -95,10 +101,15 @@ const GameContent = () => {
       {showSummary && (
         <SummaryPopup
           stats={finalStats}
+          isWin={isWin}
+          
           onRetry={resetRound}
+          onNext={handleNextAction}
           onHome={() => navigate('/')}
           
           isLevelMode={true}
+          currentCount={passedCount}
+          targetCount={PASS_TARGET}
         />
       )}
     </div>

@@ -1,7 +1,7 @@
 // ✅ 1. ค่า Config ของเกม (ความยาก/ง่าย)
 export const GAME_CONFIG = {
   PASS_REQUIRED_COUNT: 3,  // จำนวนรอบที่ต้องชนะเพื่อผ่าน
-  TIME_LIMIT_SEC: 30,      // เวลาต่อรอบ (วินาที)
+  TIME_LIMIT_SEC: 40,      // เวลาต่อรอบ (วินาที)
 
   // เกณฑ์การผ่าน (ย้ายค่ามาจากไฟล์เก่า)
   BASIC: {
@@ -10,7 +10,7 @@ export const GAME_CONFIG = {
   },
   PRO: {
     MIN_ACCURACY: 90, 
-    MIN_WPM: 40       
+    MIN_WPM: 10       
   }
 };
 

@@ -23,6 +23,10 @@ export const useTypingGame = (mode, levelId, language) => {
   const [timeLeft, setTimeLeft] = useState(TIME_LIMIT);
   const [floaters, setFloaters] = useState([]);
   const [showSummary, setShowSummary] = useState(false);
+
+  // ✅ เพิ่ม state นี้: เพื่อเช็คว่าจบแบบไหน (true=ผ่าน, false=ไม่ผ่าน)
+  const [isWin, setIsWin] = useState(false);
+
   const [finalStats, setFinalStats] = useState({
     wpm: 0,
     accuracy: 0,
@@ -41,7 +45,7 @@ export const useTypingGame = (mode, levelId, language) => {
 
   // --- Helpers ---
 
-  // 🔥 จุดที่แก้ 1: เพิ่มฟังก์ชันสลับตำแหน่ง (Shuffle)
+  // 🔥 ฟังก์ชันสลับตำแหน่ง (Shuffle)
   const shuffleArray = (array) => {
     const newArr = [...array];
     for (let i = newArr.length - 1; i > 0; i--) {
@@ -51,26 +55,39 @@ export const useTypingGame = (mode, levelId, language) => {
     return newArr;
   };
 
-  // 🔥 จุดที่แก้ 2: ปรับ Logic การดึงโจทย์ (ตัดคำ + สุ่ม)
+  // 🔥 ปรับ Logic การดึงโจทย์ (ตัดคำ + สุ่ม)
+  // 🔥 ปรับ Logic การดึงโจทย์
   const getLevelContent = useCallback(() => {
     const currentLevelData = EXERCISES_DATA?.[mode]?.[language]?.find(
       (l) => l.id === parseInt(levelId, 10)
     );
     if (!currentLevelData?.content) return "ไม่พบข้อมูลด่าน";
 
-    // ดึงเนื้อหาดิบออกมา
-    let rawContent = Array.isArray(currentLevelData.content)
-      ? currentLevelData.content[0]
-      : currentLevelData.content;
+    // 1. ตรวจสอบว่าเป็นโหมด Pro หรือไม่ (ดูจาก mode หรือ safeMode ที่เราประกาศไว้ข้างบน)
+    const isProMode = (mode || "").toLowerCase() === "pro";
 
-    // แยกคำด้วยช่องว่าง (Space)
+    let rawContent;
+
+    // 2. ถ้าเป็น Array (เช่น Pro แบบใหม่) ให้สุ่มเลือกมา 1 ช่อง (1 ช่อง = 2 ประโยค)
+    if (Array.isArray(currentLevelData.content)) {
+      const randomIndex = Math.floor(
+        Math.random() * currentLevelData.content.length
+      );
+      rawContent = currentLevelData.content[randomIndex];
+    } else {
+      rawContent = currentLevelData.content;
+    }
+
+    // 3. ถ้าเป็น Pro Mode ให้คืนค่าประโยคเต็มๆ เลย (ห้ามสลับคำ เดี๋ยวอ่านไม่รู้เรื่อง)
+    if (isProMode) {
+      return rawContent;
+    }
+
+    // 4. ถ้าเป็น Basic Mode ให้ทำเหมือนเดิม (แยกคำ -> สลับ -> ตัดมา 15 คำ)
     const wordsArray = rawContent.trim().split(/\s+/);
-
-    // สุ่มลำดับ และ ตัดมาแค่ 15 คำ
     const shuffledWords = shuffleArray(wordsArray);
     const selectedWords = shuffledWords.slice(0, 15);
 
-    // รวมกลับเป็นประโยค string
     return selectedWords.join(" ");
   }, [mode, levelId, language]);
 
@@ -80,11 +97,11 @@ export const useTypingGame = (mode, levelId, language) => {
     setPassedCount(0);
     resetRound();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [levelId, language]); // เอา getLevelContent ออกจาก dependency array เพื่อกัน loop ถ้าไม่จำเป็น
+  }, [levelId, language]);
 
   // ฟังก์ชันรีเซ็ตกระดาน
   const resetRound = useCallback(() => {
-    // 🔥 จุดที่แก้ 3: สั่งให้ Gen โจทย์ใหม่ 15 คำ ทุกครั้งที่รีเซ็ต
+    // 🔥 สั่งให้ Gen โจทย์ใหม่ 15 คำ ทุกครั้งที่รีเซ็ต
     setTargetText(getLevelContent());
 
     setUserInput("");
@@ -96,19 +113,16 @@ export const useTypingGame = (mode, levelId, language) => {
     wrongKeysRef.current = new Set();
     setFloaters([]);
     startTimeRef.current = null;
+    setShowSummary(false); // ปิด popup (สำคัญ!)
 
     setTimeout(() => inputRef.current?.focus(), 50);
-  }, [TIME_LIMIT, getLevelContent]); // เพิ่ม getLevelContent ใน dependency
+  }, [TIME_LIMIT, getLevelContent]);
 
-  // ✅ 3. Logic จัดการเมื่อตัวเลข passedCount เปลี่ยน
+  // ✅ 3. Logic บันทึก Progress (ทำงานเมื่อ passedCount เปลี่ยน)
   useEffect(() => {
-    if (passedCount === 0) return;
-
-    if (passedCount >= PASS_TARGET) {
+    // บันทึกเฉพาะเมื่อคะแนนเปลี่ยนและครบ 3 (หรือมากกว่า)
+    if (passedCount > 0 && passedCount >= PASS_TARGET) {
       saveProgressToBackend();
-      setTimeout(() => setShowSummary(true), 500);
-    } else {
-      setTimeout(() => resetRound(), 800);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [passedCount, PASS_TARGET]);
@@ -172,7 +186,7 @@ export const useTypingGame = (mode, levelId, language) => {
     if (!showSummary) inputRef.current?.focus();
   }, [showSummary]);
 
-  // ✅ 4. ฟังก์ชันจบด่าน
+  // ✅ 4. ฟังก์ชันจบด่าน (Logic ใหม่)
   const handleLevelComplete = useCallback(
     (stats) => {
       setIsGameActive(false);
@@ -183,27 +197,28 @@ export const useTypingGame = (mode, levelId, language) => {
       const isPassCriteria =
         stats.accuracy >= config.MIN_ACCURACY && stats.wpm >= config.MIN_WPM;
 
-      // เพิ่มสถานะ isPassed ลงใน stats เพื่อส่งไปให้หน้า Summary รู้ (เผื่ออยากเอาไปโชว์ว่า "ผ่าน/ไม่ผ่าน")
-      const statsWithStatus = { ...stats, isPassed: isPassCriteria };
-      setFinalStats(statsWithStatus);
+      // เซ็ตค่าสถิติ
+      setFinalStats({ ...stats, isPassed: isPassCriteria });
 
-      // 🛑 กรณี: ไม่ผ่านเกณฑ์
-      if (!isPassCriteria) {
-        // 1. ไม่ต้อง Alert แล้ว
-        // 2. ไม่ต้องรีเซ็ตอัตโนมัติ
-        // 3. แสดงหน้า Summary ทันที ให้ผู้เล่นเห็นผลงานแล้วกด "เล่นอีกครั้ง" เอง
-        setShowSummary(true);
-        return; // จบการทำงาน ไม่ไปบวกเลข passedCount
+      // บอกสถานะชนะ/แพ้ ให้ UI รู้
+      setIsWin(isPassCriteria);
+
+      if (isPassCriteria) {
+        // 🟢 กรณีผ่าน: บวกคะแนน (ถ้ายงไม่ครบ)
+        console.log("Passed! Incrementing count...");
+        setPassedCount((prev) => {
+          if (prev >= PASS_TARGET) return prev; // ครบแล้วไม่ต้องบวก
+          return prev + 1;
+        });
+      } else {
+        // 🔴 กรณีไม่ผ่าน: ไม่ต้องบวกคะแนน
+        console.log("Failed Criteria. Count remains same.");
       }
 
-      // 🟢 กรณี: ผ่านเกณฑ์
-      console.log("Passed Criteria! Incrementing count...");
-      setPassedCount((prev) => prev + 1);
-
-      // หมายเหตุ: สำหรับกรณีผ่าน (เช่น 1/3) Logic ใน useEffect ของ passedCount
-      // จะทำงานต่อเอง (ว่าจะรีเซ็ตอัตโนมัติเพื่อเล่นรอบ 2 หรือถ้าครบ 3/3 ก็จะโชว์ Summary แบบผ่าน)
+      // แสดง Popup เสมอ ไม่ว่าจะผ่านหรือไม่ผ่าน
+      setShowSummary(true);
     },
-    [config]
+    [config, PASS_TARGET]
   );
 
   const addFloater = useCallback((char, index, isCorrect) => {
@@ -305,7 +320,6 @@ export const useTypingGame = (mode, levelId, language) => {
           slowestKeys: slowest,
 
           // ✅ 2. ส่ง String ตัวเดียว ไปกันเหนียว (เผื่อ UI เก่าเรียกใช้)
-          // ต้องดึง .char ออกมา เพื่อให้เป็นตัวหนังสือ
           fastestKey: fastest.length > 0 ? fastest[0].char : "-",
           slowestKey: slowest.length > 0 ? slowest[0].char : "-",
         };
@@ -330,6 +344,7 @@ export const useTypingGame = (mode, levelId, language) => {
     PASS_TARGET,
     TIME_LIMIT,
     inputRef,
+    isWin, // ✅ ส่ง isWin ออกไปให้หน้า Page ใช้งาน
     handleInputChange,
     setIsComposing,
     resetRound,

@@ -1,7 +1,7 @@
 import React from 'react';
-import { Trophy, Activity, AlertCircle, Zap, Clock, Home, RotateCcw } from 'lucide-react';
+import { Trophy, Activity, AlertCircle, Zap, Clock, Home, RotateCcw,ArrowRight } from 'lucide-react';
 
-const SummaryPopup = ({ stats, onRetry, onHome }) => {
+const SummaryPopup = ({ stats, onRetry, onHome,isWin,onNext }) => {
   // 1. ฟังก์ชันคำนวณระดับความเร็ว (Rank)
   const getRank = (wpm) => {
     if (wpm >= 100) return { text: "พระเจ้า (Godlike)", color: "text-amber-400" };
@@ -38,8 +38,12 @@ const SummaryPopup = ({ stats, onRetry, onHome }) => {
       <div className="relative w-full max-w-5xl flex flex-col gap-6 animate-scale-up font-sans">
         
         {/* Header Text */}
-        <h1 className="text-center text-2xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-200 drop-shadow-lg" style={{ fontFamily: "'Itim', cursive" }}>
-          ความเร็วไม่ใช่ทุกอย่าง ความพยายามต่างหากที่สำคัญ สู้ต่อ!
+        <h1 className={`text-center text-2xl md:text-4xl font-bold text-transparent bg-clip-text drop-shadow-lg ${
+            isWin 
+             ? "bg-gradient-to-r from-lime-400 to-green-200" // สีเขียวถ้าผ่าน
+             : "bg-gradient-to-r from-red-400 to-orange-200" // สีแดงถ้าไม่ผ่าน
+        }`} style={{ fontFamily: "'Itim', cursive" }}>
+          {isWin ? "🎉 ยอดเยี่ยม! ภารกิจสำเร็จ" : "พยายามอีกนิด! คุณทำได้"}
         </h1>
 
         {/* --- ส่วนบน: การ์ดใหญ่ 2 ใบ (WPM / Accuracy) --- */}
@@ -149,19 +153,29 @@ const SummaryPopup = ({ stats, onRetry, onHome }) => {
 
         {/* --- Footer Buttons --- */}
         <div className="flex justify-center gap-4 mt-2">
+          {/* ปุ่มเมนูหลัก (เหมือนเดิม) */}
           <button 
             onClick={onHome}
-            className="flex items-center gap-2 px-6 md:px-8 py-3 bg-stone-800 hover:bg-stone-700 text-stone-200 font-bold rounded-full border border-stone-600 hover:border-amber-500/50 transition-all hover:scale-105"
+            className="flex items-center gap-2 px-6 md:px-8 py-3 bg-stone-800 hover:bg-stone-700 text-stone-200 font-bold rounded-full border border-stone-600 transition-all hover:scale-105"
           >
             <Home size={20} /> เมนูหลัก
           </button>
           
-          <button 
-            onClick={onRetry}
-            className="flex items-center gap-2 px-6 md:px-8 py-3 bg-gradient-to-r from-lime-600 to-lime-500 hover:from-lime-500 hover:to-lime-400 text-stone-950 font-bold rounded-full shadow-lg shadow-lime-900/20 transition-all hover:scale-105"
-          >
-            <RotateCcw size={20} /> เล่นอีกครั้ง
-          </button>
+          {isWin ? (
+             <button 
+               onClick={onNext} // ไปด่านถัดไป
+               className="flex items-center gap-2 px-6 md:px-8 py-3 bg-gradient-to-r from-lime-600 to-lime-500 hover:from-lime-500 hover:to-lime-400 text-stone-950 font-bold rounded-full shadow-lg shadow-lime-900/20 transition-all hover:scale-105 animate-pulse-slow"
+             >
+               <span>ถัดไป / ดูผลทดสอบ</span> <ArrowRight size={20} />
+             </button>
+          ) : (
+             <button 
+               onClick={onRetry} // เล่นใหม่
+               className="flex items-center gap-2 px-6 md:px-8 py-3 bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-500 hover:to-orange-400 text-white font-bold rounded-full shadow-lg shadow-orange-900/20 transition-all hover:scale-105"
+             >
+               <RotateCcw size={20} /> ลองอีกครั้ง
+             </button>
+          )}
         </div>
 
       </div>
