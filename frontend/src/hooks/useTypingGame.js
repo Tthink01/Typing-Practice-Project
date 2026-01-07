@@ -12,19 +12,23 @@ export const useTypingGame = (mode, levelId, language) => {
   const TIME_LIMIT = GAME_CONFIG.TIME_LIMIT_SEC;
 
   // --- States ---
-  const [targetText, setTargetText] = useState(""); 
+  const [targetText, setTargetText] = useState("");
   const [userInput, setUserInput] = useState("");
   const [isGameActive, setIsGameActive] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [isComposing, setIsComposing] = useState(false);
-  
-  const [passedCount, setPassedCount] = useState(0); 
+
+  const [passedCount, setPassedCount] = useState(0);
 
   const [timeLeft, setTimeLeft] = useState(TIME_LIMIT);
   const [floaters, setFloaters] = useState([]);
   const [showSummary, setShowSummary] = useState(false);
   const [finalStats, setFinalStats] = useState({
-    wpm: 0, accuracy: 0, wrongKeys: [], fastestKey: "-", slowestKey: "-",
+    wpm: 0,
+    accuracy: 0,
+    wrongKeys: [],
+    fastestKey: "-",
+    slowestKey: "-",
   });
 
   // --- Refs ---
@@ -55,8 +59,8 @@ export const useTypingGame = (mode, levelId, language) => {
     if (!currentLevelData?.content) return "ไม่พบข้อมูลด่าน";
 
     // ดึงเนื้อหาดิบออกมา
-    let rawContent = Array.isArray(currentLevelData.content) 
-      ? currentLevelData.content[0] 
+    let rawContent = Array.isArray(currentLevelData.content)
+      ? currentLevelData.content[0]
       : currentLevelData.content;
 
     // แยกคำด้วยช่องว่าง (Space)
@@ -64,18 +68,17 @@ export const useTypingGame = (mode, levelId, language) => {
 
     // สุ่มลำดับ และ ตัดมาแค่ 15 คำ
     const shuffledWords = shuffleArray(wordsArray);
-    const selectedWords = shuffledWords.slice(0, 15); 
+    const selectedWords = shuffledWords.slice(0, 15);
 
     // รวมกลับเป็นประโยค string
     return selectedWords.join(" ");
-
   }, [mode, levelId, language]);
 
   // ✅ 2. รีเซ็ตเกมเมื่อเปลี่ยนด่าน
   useEffect(() => {
     setTargetText(getLevelContent()); // โหลดโจทย์ครั้งแรก
     setPassedCount(0);
-    resetRound(); 
+    resetRound();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [levelId, language]); // เอา getLevelContent ออกจาก dependency array เพื่อกัน loop ถ้าไม่จำเป็น
 
@@ -93,7 +96,7 @@ export const useTypingGame = (mode, levelId, language) => {
     wrongKeysRef.current = new Set();
     setFloaters([]);
     startTimeRef.current = null;
-    
+
     setTimeout(() => inputRef.current?.focus(), 50);
   }, [TIME_LIMIT, getLevelContent]); // เพิ่ม getLevelContent ใน dependency
 
@@ -107,7 +110,7 @@ export const useTypingGame = (mode, levelId, language) => {
     } else {
       setTimeout(() => resetRound(), 800);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [passedCount, PASS_TARGET]);
 
   const saveProgressToBackend = () => {
@@ -116,25 +119,28 @@ export const useTypingGame = (mode, levelId, language) => {
 
     try {
       const user = JSON.parse(storedUser);
-      
-      axios.post("http://localhost:3001/users/progress", {
-        userId: user._id,
-        mode: mode,
-        language: language,
-        level: parseInt(levelId),
-        score: finalStats.wpm, 
-        wpm: finalStats.wpm,
-        accuracy: finalStats.accuracy,
-      })
-      .then((res) => {
-        console.log("Progress Saved:", res.data);
-        if (res.data.progress) {
-          user.progress = res.data.progress;
-          localStorage.setItem("currentUser", JSON.stringify(user));
-        }
-      })
-      .catch((err) => console.error(err));
-    } catch (e) { console.error(e); }
+
+      axios
+        .post("http://localhost:3001/users/progress", {
+          userId: user._id,
+          mode: mode,
+          language: language,
+          level: parseInt(levelId),
+          score: finalStats.wpm,
+          wpm: finalStats.wpm,
+          accuracy: finalStats.accuracy,
+        })
+        .then((res) => {
+          console.log("Progress Saved:", res.data);
+          if (res.data.progress) {
+            user.progress = res.data.progress;
+            localStorage.setItem("currentUser", JSON.stringify(user));
+          }
+        })
+        .catch((err) => console.error(err));
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const handleRoundFail = useCallback(() => {
@@ -167,17 +173,19 @@ export const useTypingGame = (mode, levelId, language) => {
   }, [showSummary]);
 
   // ✅ 4. ฟังก์ชันจบด่าน
-  const handleLevelComplete = useCallback((stats) => {
+  const handleLevelComplete = useCallback(
+    (stats) => {
       setIsGameActive(false);
       setIsFinished(true);
       clearInterval(timerRef.current);
       setFinalStats(stats);
 
-      const isPassCriteria = stats.accuracy >= config.MIN_ACCURACY && stats.wpm >= config.MIN_WPM;
+      const isPassCriteria =
+        stats.accuracy >= config.MIN_ACCURACY && stats.wpm >= config.MIN_WPM;
 
       if (!isPassCriteria) {
         alert(
-            `ไม่ผ่านเกณฑ์! ❌\n` +
+          `ไม่ผ่านเกณฑ์! ❌\n` +
             `ความแม่นยำของคุณ: ${stats.accuracy}% (ต้องการ ${config.MIN_ACCURACY}%)\n` +
             `ความเร็วของคุณ: ${stats.wpm} WPM (ต้องการ ${config.MIN_WPM} WPM)`
         );
@@ -196,7 +204,10 @@ export const useTypingGame = (mode, levelId, language) => {
     if (el) {
       const rect = el.getBoundingClientRect();
       const id = Date.now() + Math.random();
-      setFloaters((prev) => [...prev, { id, char, x: rect.left + rect.width / 2, y: rect.top, isCorrect }]);
+      setFloaters((prev) => [
+        ...prev,
+        { id, char, x: rect.left + rect.width / 2, y: rect.top, isCorrect },
+      ]);
     }
   }, []);
 
@@ -219,7 +230,8 @@ export const useTypingGame = (mode, levelId, language) => {
         const char = val.slice(-1);
         const index = val.length - 1;
         const targetChar = targetText[index];
-        const duration = lastKeyTime.current === 0 ? 0 : now - lastKeyTime.current;
+        const duration =
+          lastKeyTime.current === 0 ? 0 : now - lastKeyTime.current;
 
         if (!keyTimes.current[char]) keyTimes.current[char] = [];
         keyTimes.current[char].push(duration);
@@ -237,19 +249,58 @@ export const useTypingGame = (mode, levelId, language) => {
         const elapsedSeconds = TIME_LIMIT - timeLeft;
         const elapsedMin = Math.max(elapsedSeconds / 60, 1 / 60);
         const currentWpm = Math.round(val.length / 5 / elapsedMin);
-        
+
         let correctChars = 0;
         for (let i = 0; i < val.length; i++) {
           if (val[i] === targetText[i]) correctChars++;
         }
         const accuracy = Math.round((correctChars / val.length) * 100);
 
+        const processKeyStats = () => {
+          const times = keyTimes.current;
+          // แปลงจาก Object เป็น Array: [{ char: "ก", time: 150 }, ...]
+          const processed = Object.entries(times).map(([char, timeArr]) => {
+            // หาค่าเฉลี่ยเวลากด (Average Time) ของตัวอักษรนั้น
+            const avgTime = timeArr.reduce((a, b) => a + b, 0) / timeArr.length;
+            return { char, time: Math.round(avgTime) };
+          });
+
+          if (processed.length === 0) return { fastest: [], slowest: [] };
+          processed.sort((a, b) => a.time - b.time);
+
+          const fastest = processed.slice(0, 3).map((k) => ({
+            char: k.char,
+            time: k.time,
+            percent: Math.min(100, Math.max(10, (1 - k.time / 500) * 100)),
+          }));
+
+          const slowest = [...processed]
+            .sort((a, b) => b.time - a.time)
+            .slice(0, 3)
+            .map((k) => ({
+              char: k.char,
+              time: k.time,
+              percent: Math.min(100, (k.time / 1000) * 100),
+            }));
+
+          return { fastest, slowest };
+        };
+
+        const { fastest, slowest } = processKeyStats();
+
         const stats = {
           wpm: currentWpm,
           accuracy,
           wrongKeys: Array.from(wrongKeysRef.current),
-          fastestKey: "-",
-          slowestKey: "-",
+          
+          // ✅ 1. ส่ง Array เต็มๆ ไปให้หน้า UI ใหม่ (ใช้ชื่อ fastestKeys เติม s)
+          fastestKeys: fastest,
+          slowestKeys: slowest,
+
+          // ✅ 2. ส่ง String ตัวเดียว ไปกันเหนียว (เผื่อ UI เก่าเรียกใช้)
+          // ต้องดึง .char ออกมา เพื่อให้เป็นตัวหนังสือ
+          fastestKey: fastest.length > 0 ? fastest[0].char : "-",
+          slowestKey: slowest.length > 0 ? slowest[0].char : "-",
         };
 
         handleLevelComplete(stats);
@@ -262,8 +313,20 @@ export const useTypingGame = (mode, levelId, language) => {
   };
 
   return {
-    targetText, userInput, timeLeft, passedCount, floaters, showSummary, finalStats,
-    PASS_TARGET, TIME_LIMIT, inputRef,
-    handleInputChange, setIsComposing, resetRound, setShowSummary, removeFloater,
+    targetText,
+    userInput,
+    timeLeft,
+    passedCount,
+    floaters,
+    showSummary,
+    finalStats,
+    PASS_TARGET,
+    TIME_LIMIT,
+    inputRef,
+    handleInputChange,
+    setIsComposing,
+    resetRound,
+    setShowSummary,
+    removeFloater,
   };
 };
