@@ -9,40 +9,68 @@ const AdminPage = () => {
   const navigate = useNavigate();
 
   // --- Helper: ฟังก์ชันแปลง Progress Object เป็นข้อความสวยๆ ---
+  // --- Helper: ฟังก์ชันแปลง Progress Object เป็นข้อความสวยๆ ---
   const formatProgress = (progress) => {
     if (!progress) return <span className="text-gray-600">- No Data -</span>;
 
-    const basicPassed = progress.basic?.highestPassedLevel || 0;
-    const proPassed = progress.pro?.highestPassedLevel || 0;
+    // Helper ย่อยสำหรับดึงเลเวล (Level ปัจจุบัน = ด่านที่ผ่าน + 1)
+    const getLvl = (key) => (progress[key]?.highestPassedLevel || 0) + 1;
 
-    const basicCurrent = basicPassed + 1;
-    const proCurrent = proPassed + 1;
+    // Helper ย่อยสำหรับดึงจำนวนที่ผ่าน (Passed Count)
+    const getPassed = (key) => progress[key]?.highestPassedLevel || 0;
 
     return (
-      <div className="flex flex-col gap-1 text-xs">
-        {/* Basic Mode */}
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-lime-500"></span>
-          <span className="text-lime-400 font-bold">Basic:</span>
-          {/* แสดงผลเป็นด่านปัจจุบัน */}
-          <span className="text-white font-mono">
-            Current Lv. {basicCurrent}
-          </span>
+      <div className="flex flex-col gap-2 text-xs">
+        {/* Basic Mode (TH/EN) */}
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-lime-500"></span>
+            <span className="text-lime-400 font-bold w-16">Basic TH:</span>
+            <span className="text-white font-mono">
+              Lv.{getLvl("basic_TH")}
+            </span>
+            {/* ✅ เรียกใช้ getPassed ตรงนี้ */}
+            <span className="text-gray-500 text-[10px]">
+              (Pass: {getPassed("basic_TH")})
+            </span>
+          </div>
 
-          {/* (Optional) วงเล็บเล็กๆ บอกว่าผ่านไปกี่ด่าน เผื่อ Admin อยากรู้ละเอียด */}
-          <span className="text-gray-500 text-[10px]">
-            (Passed: {basicPassed})
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-lime-500 opacity-50"></span>
+            <span className="text-lime-400/70 font-bold w-16">Basic EN:</span>
+            <span className="text-white/70 font-mono">
+              Lv.{getLvl("basic_EN")}
+            </span>
+            {/* ✅ เรียกใช้ getPassed ตรงนี้ */}
+            <span className="text-gray-500 text-[10px]">
+              (Pass: {getPassed("basic_EN")})
+            </span>
+          </div>
         </div>
 
-        {/* Pro Mode */}
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-          <span className="text-amber-400 font-bold">Pro:</span>
-          <span className="text-white font-mono">Current Lv. {proCurrent}</span>
-          <span className="text-gray-500 text-[10px]">
-            (Passed: {proPassed})
-          </span>
+        {/* Pro Mode (TH/EN) */}
+        <div className="flex flex-col gap-1 mt-1 border-t border-gray-700 pt-1">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+            <span className="text-amber-400 font-bold w-16">Pro TH:</span>
+            <span className="text-white font-mono">Lv.{getLvl("pro_TH")}</span>
+            {/* ✅ เรียกใช้ getPassed ตรงนี้ */}
+            <span className="text-gray-500 text-[10px]">
+              (Pass: {getPassed("pro_TH")})
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-amber-500 opacity-50"></span>
+            <span className="text-amber-400/70 font-bold w-16">Pro EN:</span>
+            <span className="text-white/70 font-mono">
+              Lv.{getLvl("pro_EN")}
+            </span>
+            {/* ✅ เรียกใช้ getPassed ตรงนี้ */}
+            <span className="text-gray-500 text-[10px]">
+              (Pass: {getPassed("pro_EN")})
+            </span>
+          </div>
         </div>
       </div>
     );

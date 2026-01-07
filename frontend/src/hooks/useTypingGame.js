@@ -23,10 +23,10 @@ export const useTypingGame = (mode, levelId, language) => {
   const [timeLeft, setTimeLeft] = useState(TIME_LIMIT);
   const [floaters, setFloaters] = useState([]);
   const [showSummary, setShowSummary] = useState(false);
-
-  // ✅ เพิ่ม state นี้: เพื่อเช็คว่าจบแบบไหน (true=ผ่าน, false=ไม่ผ่าน)
-  const [isWin, setIsWin] = useState(false);
-
+  
+  // State เช็คผลแพ้ชนะ
+  const [isWin, setIsWin] = useState(false); 
+  
   const [finalStats, setFinalStats] = useState({
     wpm: 0,
     accuracy: 0,
@@ -55,7 +55,6 @@ export const useTypingGame = (mode, levelId, language) => {
     return newArr;
   };
 
-  // 🔥 ปรับ Logic การดึงโจทย์ (ตัดคำ + สุ่ม)
   // 🔥 ปรับ Logic การดึงโจทย์
   const getLevelContent = useCallback(() => {
     const currentLevelData = EXERCISES_DATA?.[mode]?.[language]?.find(
@@ -63,27 +62,20 @@ export const useTypingGame = (mode, levelId, language) => {
     );
     if (!currentLevelData?.content) return "ไม่พบข้อมูลด่าน";
 
-    // 1. ตรวจสอบว่าเป็นโหมด Pro หรือไม่ (ดูจาก mode หรือ safeMode ที่เราประกาศไว้ข้างบน)
     const isProMode = (mode || "").toLowerCase() === "pro";
-
     let rawContent;
 
-    // 2. ถ้าเป็น Array (เช่น Pro แบบใหม่) ให้สุ่มเลือกมา 1 ช่อง (1 ช่อง = 2 ประโยค)
     if (Array.isArray(currentLevelData.content)) {
-      const randomIndex = Math.floor(
-        Math.random() * currentLevelData.content.length
-      );
+      const randomIndex = Math.floor(Math.random() * currentLevelData.content.length);
       rawContent = currentLevelData.content[randomIndex];
     } else {
       rawContent = currentLevelData.content;
     }
 
-    // 3. ถ้าเป็น Pro Mode ให้คืนค่าประโยคเต็มๆ เลย (ห้ามสลับคำ เดี๋ยวอ่านไม่รู้เรื่อง)
     if (isProMode) {
       return rawContent;
     }
 
-    // 4. ถ้าเป็น Basic Mode ให้ทำเหมือนเดิม (แยกคำ -> สลับ -> ตัดมา 15 คำ)
     const wordsArray = rawContent.trim().split(/\s+/);
     const shuffledWords = shuffleArray(wordsArray);
     const selectedWords = shuffledWords.slice(0, 15);
@@ -93,15 +85,14 @@ export const useTypingGame = (mode, levelId, language) => {
 
   // ✅ 2. รีเซ็ตเกมเมื่อเปลี่ยนด่าน
   useEffect(() => {
-    setTargetText(getLevelContent()); // โหลดโจทย์ครั้งแรก
+    setTargetText(getLevelContent()); 
     setPassedCount(0);
     resetRound();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [levelId, language]);
+  }, [levelId, language]); 
 
   // ฟังก์ชันรีเซ็ตกระดาน
   const resetRound = useCallback(() => {
-    // 🔥 สั่งให้ Gen โจทย์ใหม่ 15 คำ ทุกครั้งที่รีเซ็ต
     setTargetText(getLevelContent());
 
     setUserInput("");
@@ -113,39 +104,33 @@ export const useTypingGame = (mode, levelId, language) => {
     wrongKeysRef.current = new Set();
     setFloaters([]);
     startTimeRef.current = null;
-    setShowSummary(false); // ปิด popup (สำคัญ!)
+    setShowSummary(false); 
 
     setTimeout(() => inputRef.current?.focus(), 50);
-  }, [TIME_LIMIT, getLevelContent]);
+  }, [TIME_LIMIT, getLevelContent]); 
 
-  // ✅ 3. Logic บันทึก Progress (ทำงานเมื่อ passedCount เปลี่ยน)
-  useEffect(() => {
-    // บันทึกเฉพาะเมื่อคะแนนเปลี่ยนและครบ 3 (หรือมากกว่า)
-    if (passedCount > 0 && passedCount >= PASS_TARGET) {
-      saveProgressToBackend();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [passedCount, PASS_TARGET]);
-
-  const saveProgressToBackend = () => {
+  // 🔥 แก้ไข: ฟังก์ชันบันทึก รับค่า stats โดยตรง (ไม่รอ State)
+  const saveProgressToBackend = (currentStats) => {
+    const cleanMode = mode ? mode.toLowerCase() : "basic";
     const storedUser = localStorage.getItem("currentUser");
     if (!storedUser) return;
 
     try {
       const user = JSON.parse(storedUser);
+      console.log("Saving Progress...", { mode: cleanMode, level: levelId });
 
       axios
         .post("http://localhost:3001/users/progress", {
           userId: user._id,
-          mode: mode,
+          mode: cleanMode,
           language: language,
           level: parseInt(levelId),
-          score: finalStats.wpm,
-          wpm: finalStats.wpm,
-          accuracy: finalStats.accuracy,
+          score: currentStats.wpm,     // ใช้ค่าจาก parameter
+          wpm: currentStats.wpm,       // ใช้ค่าจาก parameter
+          accuracy: currentStats.accuracy, // ใช้ค่าจาก parameter
         })
         .then((res) => {
-          console.log("Progress Saved:", res.data);
+          console.log("Progress Saved Successfully:", res.data);
           if (res.data.progress) {
             user.progress = res.data.progress;
             localStorage.setItem("currentUser", JSON.stringify(user));
@@ -186,39 +171,43 @@ export const useTypingGame = (mode, levelId, language) => {
     if (!showSummary) inputRef.current?.focus();
   }, [showSummary]);
 
-  // ✅ 4. ฟังก์ชันจบด่าน (Logic ใหม่)
+  // ✅ 4. ฟังก์ชันจบด่าน (Logic ใหม่ + Save ทันที)
   const handleLevelComplete = useCallback(
     (stats) => {
       setIsGameActive(false);
       setIsFinished(true);
       clearInterval(timerRef.current);
 
-      // คำนวณว่าผ่านเกณฑ์ไหม
       const isPassCriteria =
         stats.accuracy >= config.MIN_ACCURACY && stats.wpm >= config.MIN_WPM;
 
-      // เซ็ตค่าสถิติ
-      setFinalStats({ ...stats, isPassed: isPassCriteria });
-
-      // บอกสถานะชนะ/แพ้ ให้ UI รู้
+      setFinalStats({ ...stats, isPassed: isPassCriteria });  
       setIsWin(isPassCriteria);
 
+      let nextPassedCount = passedCount;
+
       if (isPassCriteria) {
-        // 🟢 กรณีผ่าน: บวกคะแนน (ถ้ายงไม่ครบ)
-        console.log("Passed! Incrementing count...");
-        setPassedCount((prev) => {
-          if (prev >= PASS_TARGET) return prev; // ครบแล้วไม่ต้องบวก
-          return prev + 1;
-        });
+        console.log("Passed! Checking count...");
+        
+        // ถ้ายังไม่ครบ 3 ให้บวกเพิ่ม
+        if (passedCount < PASS_TARGET) {
+           nextPassedCount = passedCount + 1;
+           setPassedCount(nextPassedCount);
+        }
+
+        // 🔥 เช็คเงื่อนไขตรงนี้เลย: ถ้าครบ 3 รอบ (หรือมากกว่า) ให้บันทึกทันที!
+        if (nextPassedCount >= PASS_TARGET) {
+             console.log("Target Reached! Saving to backend...");
+             saveProgressToBackend(stats); // ส่ง stats เข้าไปบันทึกเลย
+        }
+
       } else {
-        // 🔴 กรณีไม่ผ่าน: ไม่ต้องบวกคะแนน
         console.log("Failed Criteria. Count remains same.");
       }
 
-      // แสดง Popup เสมอ ไม่ว่าจะผ่านหรือไม่ผ่าน
       setShowSummary(true);
     },
-    [config, PASS_TARGET]
+    [config, PASS_TARGET, passedCount, mode, levelId, language]
   );
 
   const addFloater = useCallback((char, index, isCorrect) => {
@@ -280,9 +269,7 @@ export const useTypingGame = (mode, levelId, language) => {
 
         const processKeyStats = () => {
           const times = keyTimes.current;
-          // แปลงจาก Object เป็น Array: [{ char: "ก", time: 150 }, ...]
           const processed = Object.entries(times).map(([char, timeArr]) => {
-            // หาค่าเฉลี่ยเวลากด (Average Time) ของตัวอักษรนั้น
             const avgTime = timeArr.reduce((a, b) => a + b, 0) / timeArr.length;
             return { char, time: Math.round(avgTime) };
           });
@@ -314,12 +301,8 @@ export const useTypingGame = (mode, levelId, language) => {
           wpm: currentWpm,
           accuracy,
           wrongKeys: Array.from(wrongKeysRef.current),
-
-          // ✅ 1. ส่ง Array เต็มๆ ไปให้หน้า UI ใหม่ (ใช้ชื่อ fastestKeys เติม s)
           fastestKeys: fastest,
           slowestKeys: slowest,
-
-          // ✅ 2. ส่ง String ตัวเดียว ไปกันเหนียว (เผื่อ UI เก่าเรียกใช้)
           fastestKey: fastest.length > 0 ? fastest[0].char : "-",
           slowestKey: slowest.length > 0 ? slowest[0].char : "-",
         };
@@ -344,7 +327,7 @@ export const useTypingGame = (mode, levelId, language) => {
     PASS_TARGET,
     TIME_LIMIT,
     inputRef,
-    isWin, // ✅ ส่ง isWin ออกไปให้หน้า Page ใช้งาน
+    isWin, 
     handleInputChange,
     setIsComposing,
     resetRound,
