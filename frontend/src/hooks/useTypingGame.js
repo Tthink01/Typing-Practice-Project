@@ -178,25 +178,32 @@ export const useTypingGame = (mode, levelId, language) => {
       setIsGameActive(false);
       setIsFinished(true);
       clearInterval(timerRef.current);
-      setFinalStats(stats);
 
+      // คำนวณว่าผ่านเกณฑ์ไหม
       const isPassCriteria =
         stats.accuracy >= config.MIN_ACCURACY && stats.wpm >= config.MIN_WPM;
 
+      // เพิ่มสถานะ isPassed ลงใน stats เพื่อส่งไปให้หน้า Summary รู้ (เผื่ออยากเอาไปโชว์ว่า "ผ่าน/ไม่ผ่าน")
+      const statsWithStatus = { ...stats, isPassed: isPassCriteria };
+      setFinalStats(statsWithStatus);
+
+      // 🛑 กรณี: ไม่ผ่านเกณฑ์
       if (!isPassCriteria) {
-        alert(
-          `ไม่ผ่านเกณฑ์! ❌\n` +
-            `ความแม่นยำของคุณ: ${stats.accuracy}% (ต้องการ ${config.MIN_ACCURACY}%)\n` +
-            `ความเร็วของคุณ: ${stats.wpm} WPM (ต้องการ ${config.MIN_WPM} WPM)`
-        );
-        setTimeout(() => resetRound(), 1000);
-        return;
+        // 1. ไม่ต้อง Alert แล้ว
+        // 2. ไม่ต้องรีเซ็ตอัตโนมัติ
+        // 3. แสดงหน้า Summary ทันที ให้ผู้เล่นเห็นผลงานแล้วกด "เล่นอีกครั้ง" เอง
+        setShowSummary(true);
+        return; // จบการทำงาน ไม่ไปบวกเลข passedCount
       }
 
+      // 🟢 กรณี: ผ่านเกณฑ์
       console.log("Passed Criteria! Incrementing count...");
       setPassedCount((prev) => prev + 1);
+
+      // หมายเหตุ: สำหรับกรณีผ่าน (เช่น 1/3) Logic ใน useEffect ของ passedCount
+      // จะทำงานต่อเอง (ว่าจะรีเซ็ตอัตโนมัติเพื่อเล่นรอบ 2 หรือถ้าครบ 3/3 ก็จะโชว์ Summary แบบผ่าน)
     },
-    [config, resetRound]
+    [config]
   );
 
   const addFloater = useCallback((char, index, isCorrect) => {
@@ -292,7 +299,7 @@ export const useTypingGame = (mode, levelId, language) => {
           wpm: currentWpm,
           accuracy,
           wrongKeys: Array.from(wrongKeysRef.current),
-          
+
           // ✅ 1. ส่ง Array เต็มๆ ไปให้หน้า UI ใหม่ (ใช้ชื่อ fastestKeys เติม s)
           fastestKeys: fastest,
           slowestKeys: slowest,
