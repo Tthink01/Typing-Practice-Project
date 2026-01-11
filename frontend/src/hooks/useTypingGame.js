@@ -4,28 +4,35 @@ import { EXERCISES_DATA } from "../data/exercises";
 import { GAME_CONFIG } from "../utils/gameRule";
 
 export const useTypingGame = (mode, levelId, language) => {
-  // ✅ 1. ดึง Config แบบปลอดภัย (รองรับทั้ง "basic", "Basic", "pro", "Pro")
+  // ✅ 1. ดึง Config แบบปลอดภัย
   const safeMode = mode?.toLowerCase() === "pro" ? "PRO" : "BASIC";
-  const config = GAME_CONFIG[safeMode]; // ดึงเกณฑ์คะแนน (MIN_ACCURACY, MIN_WPM)
+  const config = GAME_CONFIG[safeMode];
 
   const PASS_TARGET = GAME_CONFIG.PASS_REQUIRED_COUNT;
   const TIME_LIMIT = GAME_CONFIG.TIME_LIMIT_SEC;
 
   // --- States ---
-  const [targetText, setTargetText] = useState(""); 
+  const [targetText, setTargetText] = useState("");
   const [userInput, setUserInput] = useState("");
   const [isGameActive, setIsGameActive] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [isComposing, setIsComposing] = useState(false);
-  
-  // ตัวนับรอบ (0/3)
-  const [passedCount, setPassedCount] = useState(0); 
+
+  const [passedCount, setPassedCount] = useState(0);
 
   const [timeLeft, setTimeLeft] = useState(TIME_LIMIT);
   const [floaters, setFloaters] = useState([]);
   const [showSummary, setShowSummary] = useState(false);
+  
+  // State เช็คผลแพ้ชนะ
+  const [isWin, setIsWin] = useState(false); 
+  
   const [finalStats, setFinalStats] = useState({
-    wpm: 0, accuracy: 0, wrongKeys: [], fastestKey: "-", slowestKey: "-",
+    wpm: 0,
+    accuracy: 0,
+    wrongKeys: [],
+    fastestKey: "-",
+    slowestKey: "-",
   });
 
   // --- Refs ---
@@ -37,24 +44,57 @@ export const useTypingGame = (mode, levelId, language) => {
   const startTimeRef = useRef(null);
 
   // --- Helpers ---
+
+  // 🔥 ฟังก์ชันสลับตำแหน่ง (Shuffle)
+  const shuffleArray = (array) => {
+    const newArr = [...array];
+    for (let i = newArr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+    }
+    return newArr;
+  };
+
+  // 🔥 ปรับ Logic การดึงโจทย์
   const getLevelContent = useCallback(() => {
-    // ดึงโจทย์ตามภาษา (TH/EN)
     const currentLevelData = EXERCISES_DATA?.[mode]?.[language]?.find(
       (l) => l.id === parseInt(levelId, 10)
     );
     if (!currentLevelData?.content) return "ไม่พบข้อมูลด่าน";
-    return Array.isArray(currentLevelData.content) ? currentLevelData.content[0] : currentLevelData.content;
+
+    const isProMode = (mode || "").toLowerCase() === "pro";
+    let rawContent;
+
+    if (Array.isArray(currentLevelData.content)) {
+      const randomIndex = Math.floor(Math.random() * currentLevelData.content.length);
+      rawContent = currentLevelData.content[randomIndex];
+    } else {
+      rawContent = currentLevelData.content;
+    }
+
+    if (isProMode) {
+      return rawContent;
+    }
+
+    const wordsArray = rawContent.trim().split(/\s+/);
+    const shuffledWords = shuffleArray(wordsArray);
+    const selectedWords = shuffledWords.slice(0, 15);
+
+    return selectedWords.join(" ");
   }, [mode, levelId, language]);
 
   // ✅ 2. รีเซ็ตเกมเมื่อเปลี่ยนด่าน
   useEffect(() => {
-    setTargetText(getLevelContent());
-    setPassedCount(0); // รีเซ็ตตัวนับเป็น 0
-    resetRound(); 
-  }, [levelId, language, getLevelContent]);
+    setTargetText(getLevelContent()); 
+    setPassedCount(0);
+    resetRound();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [levelId, language]); 
 
   // ฟังก์ชันรีเซ็ตกระดาน
   const resetRound = useCallback(() => {
+    setTargetText(getLevelContent());
+
     setUserInput("");
     setIsGameActive(false);
     setIsFinished(false);
@@ -64,52 +104,42 @@ export const useTypingGame = (mode, levelId, language) => {
     wrongKeysRef.current = new Set();
     setFloaters([]);
     startTimeRef.current = null;
-    
+    setShowSummary(false); 
+
     setTimeout(() => inputRef.current?.focus(), 50);
-  }, [TIME_LIMIT]);
+  }, [TIME_LIMIT, getLevelContent]); 
 
-  // ✅ 3. Logic จัดการเมื่อตัวเลข passedCount เปลี่ยน (Save หรือ ไปต่อ)
-  useEffect(() => {
-    if (passedCount === 0) return;
-
-    // ถ้าผ่านครบตามเป้า (เช่น 3/3)
-    if (passedCount >= PASS_TARGET) {
-      saveProgressToBackend(); // บันทึกข้อมูล
-      setTimeout(() => setShowSummary(true), 500); // แสดงหน้าสรุป
-    } else {
-      // ถ้ายังไม่ครบ (เช่น 1/3) -> รีเซ็ตกระดานเล่นต่อ
-      setTimeout(() => resetRound(), 800);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [passedCount, PASS_TARGET]);
-
-  // ฟังก์ชันบันทึกข้อมูล (แยกออกมาให้ชัดเจน)
-  const saveProgressToBackend = () => {
+  // 🔥 แก้ไข: ฟังก์ชันบันทึก รับค่า stats โดยตรง (ไม่รอ State)
+  const saveProgressToBackend = (currentStats) => {
+    const cleanMode = mode ? mode.toLowerCase() : "basic";
     const storedUser = localStorage.getItem("currentUser");
     if (!storedUser) return;
 
     try {
       const user = JSON.parse(storedUser);
-      
-      axios.post("http://localhost:3001/users/progress", {
-        userId: user._id,
-        mode: mode,
-        language: language,
-        level: parseInt(levelId),
-        score: finalStats.wpm, 
-        wpm: finalStats.wpm,
-        accuracy: finalStats.accuracy,
-      })
-      .then((res) => {
-        console.log("Progress Saved:", res.data);
-        // อัปเดต localStorage เพื่อให้หน้า Home รู้ทันที
-        if (res.data.progress) {
-          user.progress = res.data.progress;
-          localStorage.setItem("currentUser", JSON.stringify(user));
-        }
-      })
-      .catch((err) => console.error(err));
-    } catch (e) { console.error(e); }
+      console.log("Saving Progress...", { mode: cleanMode, level: levelId });
+
+      axios
+        .post("http://localhost:3001/users/progress", {
+          userId: user._id,
+          mode: cleanMode,
+          language: language,
+          level: parseInt(levelId),
+          score: currentStats.wpm,     // ใช้ค่าจาก parameter
+          wpm: currentStats.wpm,       // ใช้ค่าจาก parameter
+          accuracy: currentStats.accuracy, // ใช้ค่าจาก parameter
+        })
+        .then((res) => {
+          console.log("Progress Saved Successfully:", res.data);
+          if (res.data.progress) {
+            user.progress = res.data.progress;
+            localStorage.setItem("currentUser", JSON.stringify(user));
+          }
+        })
+        .catch((err) => console.error(err));
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const handleRoundFail = useCallback(() => {
@@ -141,33 +171,43 @@ export const useTypingGame = (mode, levelId, language) => {
     if (!showSummary) inputRef.current?.focus();
   }, [showSummary]);
 
-  // ✅ 4. ฟังก์ชันจบด่าน (หัวใจสำคัญ: ตรวจสอบเกณฑ์)
-  const handleLevelComplete = useCallback((stats) => {
+  // ✅ 4. ฟังก์ชันจบด่าน (Logic ใหม่ + Save ทันที)
+  const handleLevelComplete = useCallback(
+    (stats) => {
       setIsGameActive(false);
       setIsFinished(true);
       clearInterval(timerRef.current);
-      setFinalStats(stats); // เก็บสถิติไว้ก่อน
 
-      // --- LOGIC ตรวจคะแนน (ของจริง) ---
-      // ต้องแม่นยำ >= ค่าที่ตั้งไว้ และ ความเร็ว >= ค่าที่ตั้งไว้
-      const isPassCriteria = stats.accuracy >= config.MIN_ACCURACY && stats.wpm >= config.MIN_WPM;
+      const isPassCriteria =
+        stats.accuracy >= config.MIN_ACCURACY && stats.wpm >= config.MIN_WPM;
 
-      if (!isPassCriteria) {
-        // ❌ ถ้าไม่ผ่าน: แจ้งเตือน + รีเซ็ต + ไม่นับคะแนน
-        alert(
-            `ไม่ผ่านเกณฑ์! ❌\n` +
-            `ความแม่นยำของคุณ: ${stats.accuracy}% (ต้องการ ${config.MIN_ACCURACY}%)\n` +
-            `ความเร็วของคุณ: ${stats.wpm} WPM (ต้องการ ${config.MIN_WPM} WPM)`
-        );
-        setTimeout(() => resetRound(), 1000);
-        return; // 🛑 จบการทำงาน ไม่ไปบรรทัดถัดไป
+      setFinalStats({ ...stats, isPassed: isPassCriteria });  
+      setIsWin(isPassCriteria);
+
+      let nextPassedCount = passedCount;
+
+      if (isPassCriteria) {
+        console.log("Passed! Checking count...");
+        
+        // ถ้ายังไม่ครบ 3 ให้บวกเพิ่ม
+        if (passedCount < PASS_TARGET) {
+           nextPassedCount = passedCount + 1;
+           setPassedCount(nextPassedCount);
+        }
+
+        // 🔥 เช็คเงื่อนไขตรงนี้เลย: ถ้าครบ 3 รอบ (หรือมากกว่า) ให้บันทึกทันที!
+        if (nextPassedCount >= PASS_TARGET) {
+             console.log("Target Reached! Saving to backend...");
+             saveProgressToBackend(stats); // ส่ง stats เข้าไปบันทึกเลย
+        }
+
+      } else {
+        console.log("Failed Criteria. Count remains same.");
       }
 
-      // 🟢 ถ้าผ่านเกณฑ์: สั่งบวกเลข (เดี๋ยว useEffect ด้านบนจะทำงานต่อเอง)
-      console.log("Passed Criteria! Incrementing count...");
-      setPassedCount((prev) => prev + 1);
+      setShowSummary(true);
     },
-    [config, resetRound]
+    [config, PASS_TARGET, passedCount, mode, levelId, language]
   );
 
   const addFloater = useCallback((char, index, isCorrect) => {
@@ -175,7 +215,10 @@ export const useTypingGame = (mode, levelId, language) => {
     if (el) {
       const rect = el.getBoundingClientRect();
       const id = Date.now() + Math.random();
-      setFloaters((prev) => [...prev, { id, char, x: rect.left + rect.width / 2, y: rect.top, isCorrect }]);
+      setFloaters((prev) => [
+        ...prev,
+        { id, char, x: rect.left + rect.width / 2, y: rect.top, isCorrect },
+      ]);
     }
   }, []);
 
@@ -198,7 +241,8 @@ export const useTypingGame = (mode, levelId, language) => {
         const char = val.slice(-1);
         const index = val.length - 1;
         const targetChar = targetText[index];
-        const duration = lastKeyTime.current === 0 ? 0 : now - lastKeyTime.current;
+        const duration =
+          lastKeyTime.current === 0 ? 0 : now - lastKeyTime.current;
 
         if (!keyTimes.current[char]) keyTimes.current[char] = [];
         keyTimes.current[char].push(duration);
@@ -213,23 +257,54 @@ export const useTypingGame = (mode, levelId, language) => {
       setUserInput(val);
 
       if (val.length === targetText.length) {
-        // คำนวณ Stats
         const elapsedSeconds = TIME_LIMIT - timeLeft;
         const elapsedMin = Math.max(elapsedSeconds / 60, 1 / 60);
         const currentWpm = Math.round(val.length / 5 / elapsedMin);
-        
+
         let correctChars = 0;
         for (let i = 0; i < val.length; i++) {
           if (val[i] === targetText[i]) correctChars++;
         }
         const accuracy = Math.round((correctChars / val.length) * 100);
 
+        const processKeyStats = () => {
+          const times = keyTimes.current;
+          const processed = Object.entries(times).map(([char, timeArr]) => {
+            const avgTime = timeArr.reduce((a, b) => a + b, 0) / timeArr.length;
+            return { char, time: Math.round(avgTime) };
+          });
+
+          if (processed.length === 0) return { fastest: [], slowest: [] };
+          processed.sort((a, b) => a.time - b.time);
+
+          const fastest = processed.slice(0, 3).map((k) => ({
+            char: k.char,
+            time: k.time,
+            percent: Math.min(100, Math.max(10, (1 - k.time / 500) * 100)),
+          }));
+
+          const slowest = [...processed]
+            .sort((a, b) => b.time - a.time)
+            .slice(0, 3)
+            .map((k) => ({
+              char: k.char,
+              time: k.time,
+              percent: Math.min(100, (k.time / 1000) * 100),
+            }));
+
+          return { fastest, slowest };
+        };
+
+        const { fastest, slowest } = processKeyStats();
+
         const stats = {
           wpm: currentWpm,
           accuracy,
           wrongKeys: Array.from(wrongKeysRef.current),
-          fastestKey: "-",
-          slowestKey: "-",
+          fastestKeys: fastest,
+          slowestKeys: slowest,
+          fastestKey: fastest.length > 0 ? fastest[0].char : "-",
+          slowestKey: slowest.length > 0 ? slowest[0].char : "-",
         };
 
         handleLevelComplete(stats);
@@ -242,8 +317,21 @@ export const useTypingGame = (mode, levelId, language) => {
   };
 
   return {
-    targetText, userInput, timeLeft, passedCount, floaters, showSummary, finalStats,
-    PASS_TARGET, TIME_LIMIT, inputRef,
-    handleInputChange, setIsComposing, resetRound, setShowSummary, removeFloater,
+    targetText,
+    userInput,
+    timeLeft,
+    passedCount,
+    floaters,
+    showSummary,
+    finalStats,
+    PASS_TARGET,
+    TIME_LIMIT,
+    inputRef,
+    isWin, 
+    handleInputChange,
+    setIsComposing,
+    resetRound,
+    setShowSummary,
+    removeFloater,
   };
 };

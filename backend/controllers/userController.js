@@ -67,8 +67,8 @@ const getUserById = (req, res) => {
 };
 
 // --- Game: อัปเดตความคืบหน้า (Save Progress) ---
+// --- Game: อัปเดตความคืบหน้า (Save Progress) ---
 const updateProgress = async (req, res) => {
-  // ✅ 1. รับค่า level แทน levelId (แก้ชื่อตัวแปรให้ตรงกับ destructuring)
   const { userId, mode, level, score, wpm, accuracy, language } = req.body;
 
   try {
@@ -78,45 +78,49 @@ const updateProgress = async (req, res) => {
       return res.json({ status: "Error", message: "User not found" });
     }
 
-    // ✅ 2. สร้าง Key แยกตามภาษา (เช่น basic_TH, basic_EN)
-    // ถ้าไม่มีการส่ง language มา ให้ default เป็น "TH" กันเหนียว
+    // ✅ แก้ไข 1: บังคับให้เป็นตัวพิมพ์เล็กเสมอ (basic, pro)
+    const cleanMode = mode ? mode.toLowerCase() : "basic";
     const langSuffix = language || "TH";
-    const progressKey = `${mode}_${langSuffix}`;
+    
+    // จะได้ basic_TH หรือ pro_TH ตรงกับ Schema แน่นอน
+    const progressKey = `${cleanMode}_${langSuffix}`; 
 
-    // ✅ 3. เช็คและสร้าง Object รอไว้ถ้ายังไม่มี (กัน Error)
+    // เช็คว่ามี Object นี้ไหม (ถ้าไม่มีสร้างใหม่)
     if (!user.progress[progressKey]) {
       user.progress[progressKey] = { highestPassedLevel: 0, scores: {} };
     }
 
-    // ✅ 4. ใช้ progressKey ในการเข้าถึงข้อมูล (แทน mode เฉยๆ แบบเก่า)
     const currentProgress = user.progress[progressKey];
-
-    // แปลง level เป็นตัวเลข
     const newLevel = parseInt(level);
     const currentHighest = currentProgress.highestPassedLevel || 0;
 
-    // เช็คว่าเล่นได้ไกลกว่าเดิมไหม
+    console.log(`[API] Updating ${progressKey} | Current: ${currentHighest} -> New: ${newLevel}`);
+
+    // ✅ แก้ไข 2: Logic การบันทึก
+    // ถ้าเล่นด่านที่สูงกว่า หรือ เท่ากับด่านปัจจุบัน (กรณีเล่นซ้ำให้ผ่าน) ก็ให้บันทึกได้
+    // แต่ปกติเราจะอัปเดตเมื่อ newLevel > currentHighest เพื่อปลดล็อคด่านถัดไป
     if (newLevel > currentHighest) {
-      // อัปเดตค่าลงไปใน progressKey นั้นๆ
       user.progress[progressKey].highestPassedLevel = newLevel;
 
-      // ✅ 5. บันทึก Score (Optional: ถ้าอยากเก็บคะแนนด้วย)
-      // user.progress[progressKey].scores[newLevel] = { score, wpm, accuracy };
+      // บันทึก Score (ถ้ามี)
+      if (!user.progress[progressKey].scores) user.progress[progressKey].scores = {};
+      user.progress[progressKey].scores[newLevel] = { score, wpm, accuracy };
 
-      // บอก Mongoose ว่า Object นี้มีการเปลี่ยนแปลง
+      // 🔥 สำคัญ: แจ้ง Mongoose ว่ามีการแก้ไข Object นี้
       user.markModified("progress");
 
       await user.save();
 
       res.json({
         status: "Success",
-        message: "Progress saved",
+        message: `Level Up to ${newLevel}`,
         progress: user.progress,
       });
     } else {
+      // ถ้าเลเวลไม่เพิ่ม ก็ส่ง success กลับไป (frontend จะได้ไม่ error)
       res.json({
         status: "Success",
-        message: "No progress update needed",
+        message: "Already passed this level",
         progress: user.progress,
       });
     }
@@ -125,7 +129,6 @@ const updateProgress = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
 // --- Reset Progress (อัปเดตให้รองรับแยกภาษา) ---
 const resetProgress = async (req, res) => {
   const { userId } = req.body;
