@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import axios from "../utils/api";
+import axios from "axios";
 import { EXERCISES_DATA } from "../data/exercises";
 import { GAME_CONFIG } from "../utils/gameRule";
 
