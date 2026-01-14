@@ -190,12 +190,34 @@ const HomePage = () => {
 
   const navigate = useNavigate();
 
+  const basicTHLevel = userProgress["basic_TH"]?.highestPassedLevel || 0;
+  const basicENLevel = userProgress["basic_EN"]?.highestPassedLevel || 0;
+
+  // เอาค่าที่มากที่สุด (สมมติเล่น TH ถึงด่าน 5 แต่ EN ถึงด่าน 1 ก็ให้ผ่าน)
+  const currentMaxLevel = Math.max(basicTHLevel, basicENLevel);
+
+  const REQUIRED_LEVELS = 5; // ต้องผ่าน 5 ด่าน
+  const isProUnlocked = currentMaxLevel >= REQUIRED_LEVELS;
+
+  // ----------------------------------------------------
+  // 🔥 2. สร้างตัวแปร Game Mode แบบ Dynamic (เพิ่มใหม่)
+  // ----------------------------------------------------
+  const dynamicGameModes = GAME_MODES.map((mode) => {
+    if (mode.id === "pro") {
+      return {
+        ...mode,
+        isLocked: !isProUnlocked, // ถ้าผ่านเงื่อนไข = ไม่ล็อค
+      };
+    }
+    return mode; // Basic ปล่อยเหมือนเดิม (ตามไฟล์ config)
+  });
+
   return (
     <div className="h-full flex flex-col bg-[#0a0a0a] text-white relative overflow-hidden font-sans">
-      {/* --- Layer 1: Welcome Screen Overlay --- */}
+      {/* --- Layer 1: Welcome Screen --- */}
       {showWelcome && <WelcomeScreen onStart={handleStartGame} />}
 
-      {/* --- Layer 2: Background Effects --- */}
+      {/* --- Layer 2: Background --- */}
       <div className="absolute top-[-10%] left-1/2 transform -translate-x-1/2 w-[800px] h-[500px] bg-orange-900/20 rounded-full blur-[120px] pointer-events-none" />
 
       {/* --- Layer 3: Main Content --- */}
@@ -204,30 +226,55 @@ const HomePage = () => {
 
         {/* Mode Selection Grid */}
         <div className="flex flex-col md:flex-row font-itim gap-6 md:gap-8 justify-center items-center w-full max-w-4xl mt-2">
-          {GAME_MODES.map((mode) => (
+          {/* ✅ ใช้ dynamicGameModes แทน GAME_MODES เดิม */}
+          {dynamicGameModes.map((mode) => (
             <div
               key={mode.id}
-              onClick={() => handleCardClick(mode)}
-              className="cursor-pointer transition-transform hover:scale-105"
-            >
-              <ModeCard
-                title={mode.title}
-                level={mode.level}
-                description={mode.description}
-                isLocked={mode.isLocked}
-                type={mode.id}
-                helpText={
-                  mode.id === "basic"
-                    ? "ผู้ใช้ต้องเล่นให้ผ่าน 0 รอบ เพื่อปลดล็อคด่านถัดไป🩷"
-                    : "ต้องเล่นให้ผ่าน 3 ด่าน ของระดับพื้นฐาน เพื่อปลดล็อค ระดับใช้ได้✌🏻❤️"
+              onClick={() => {
+                // ✅ เช็คก่อนว่าล็อคไหม ถ้าไม่ล็อคค่อยให้กด
+                if (!mode.isLocked) {
+                  handleCardClick(mode);
                 }
-              />
+              }}
+              className={`
+                transition-transform duration-300
+                ${
+                  mode.isLocked
+                    ? "cursor-not-allowed opacity-80 grayscale-[0.5]" // Style ตอนล็อค
+                    : "cursor-pointer hover:scale-105" // Style ตอนปกติ
+                }
+              `}
+            >
+              <div className="relative">
+                <ModeCard
+                  title={mode.title}
+                  level={mode.level}
+                  description={mode.description}
+                  isLocked={mode.isLocked} // ส่งสถานะล็อคไปให้การ์ดแสดงผล
+                  type={mode.id}
+                  helpText={
+                    mode.id === "basic"
+                      ? "ผู้ใช้ต้องเล่นให้ผ่าน 0 รอบ เพื่อปลดล็อคด่านถัดไป🩷"
+                      : "ต้องเล่นให้ผ่าน 3 ด่าน ของระดับพื้นฐาน เพื่อปลดล็อค ระดับใช้ได้✌🏻❤️"
+                  }
+                />
+
+                {/* ✅ เพิ่มข้อความเตือนถ้ายังล็อคอยู่ */}
+                {mode.isLocked && (
+                  <div className="absolute -bottom-10 left-0 w-full text-center">
+                    <span className="text-sm text-red-400 bg-black/50 px-3 py-1 rounded-full border border-red-500/30">
+                      🔒 ขาดอีก {Math.max(0, REQUIRED_LEVELS - currentMaxLevel)}{" "}
+                      ด่าน
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
           ))}
         </div>
       </main>
 
-      {/* --- Layer 4: Floating UI Elements --- */}
+      {/* --- Layer 4: Floating UI --- */}
       <div className="absolute right-4 top-1/2 transform -translate-y-1/2 hidden md:block z-20">
         <button
           onClick={() => navigate("/sandbox")}
@@ -253,9 +300,7 @@ const HomePage = () => {
         }
         language={practiceLanguage}
         setLanguage={setPracticeLanguage}
-        // ✅ 3. ส่งฟังก์ชัน Logic ที่แก้ไขแล้วเข้าไป
         isLevelUnlocked={isLevelUnlocked}
-        // ✅ 4. ส่งข้อมูลคะแนน (Passed count) เข้าไปแสดงผล
         progress={
           activeModal
             ? userProgress[`${activeModal}_${practiceLanguage}`] || {}
