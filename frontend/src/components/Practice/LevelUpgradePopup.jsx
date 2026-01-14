@@ -1,35 +1,45 @@
-import React, { useMemo, useState } from "react"; // ✅ เพิ่ม useState
+import React, { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion"; // eslint-disable-line no-unused-vars
-import { Check, X, Trophy } from "lucide-react";
+import { Check, X, Trophy, Home } from "lucide-react";
 
 const LevelUpgradePopup = ({
   isOpen,
   onNext,
   onBack,
+  onHome,
   passCount = 0,
   targetCount = 3,
-  isWin = false, 
+  isWin = false,
+  history = [], // ✅ รับค่า history
 }) => {
   // -------------------------------------------------------
-  // 1. Hooks ต้องประกาศด้านบนสุดเสมอ (ห้ามมี if มาคั่นก่อนหน้านี้)
+  // Hooks
   // -------------------------------------------------------
 
-  // ✅ แก้ไข 1: ใช้ useState แทน useMemo สำหรับค่า Random
-  // การใส่ฟังก์ชันลงใน useState (() => ...) จะทำให้โค้ดรันแค่ครั้งเดียวตอนเริ่ม (Lazy Init)
-  // และไม่ถือว่าเป็นการทำ Impure function ในระหว่าง Render
-  const [sessionID] = useState(() => Math.random().toString(36).substr(2, 6).toUpperCase());
+  // สร้าง Session ID ครั้งเดียว
+  const [sessionID] = useState(() =>
+    Math.random().toString(36).substr(2, 6).toUpperCase()
+  );
 
-  // ✅ แก้ไข 2: useMemo อยู่ในตำแหน่งที่ถูกต้อง
+  // ✅ กำหนดจำนวนช่องเป็น 5 ช่อง (Fix ตายตัว)
+  const TOTAL_SLOTS = 5;
+
+  const isLevelComplete = passCount >= targetCount;
+
+  // คำนวณสถานะของแต่ละช่องจาก history
   const slots = useMemo(() => {
-    return Array.from({ length: targetCount }).map((_, index) => {
-      if (index < passCount) return "passed";
-      if (index === passCount && !isWin) return "failed";
-      return "pending";
+    return Array.from({ length: TOTAL_SLOTS }).map((_, index) => {
+      const result = history[index];
+
+      if (result === true) return "passed";
+      if (result === false) return "failed";
+
+      return "pending"; // ยังเล่นไม่ถึงรอบนี้
     });
-  }, [passCount, targetCount, isWin]);
+  }, [history, TOTAL_SLOTS]);
 
   // -------------------------------------------------------
-  // 2. เงื่อนไข Return (Conditional Rendering) ต้องอยู่หลัง Hooks ทั้งหมด
+  // Conditional Render
   // -------------------------------------------------------
   if (!isOpen) return null;
 
@@ -81,7 +91,11 @@ const LevelUpgradePopup = ({
               <div className="w-full h-1.5 bg-gray-700 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-yellow-500 rounded-full transition-all duration-500"
-                  style={{ width: `${(Math.min(passCount, targetCount) / targetCount) * 100}%` }}
+                  style={{
+                    width: `${
+                      (Math.min(passCount, targetCount) / targetCount) * 100
+                    }%`,
+                  }}
                 />
               </div>
             </div>
@@ -92,7 +106,9 @@ const LevelUpgradePopup = ({
             <div className="flex justify-between items-start mb-12">
               <div>
                 <h3 className="flex items-center gap-2 text-xl font-bold text-white mb-1">
-                  <span className={isWin ? "text-green-500" : "text-red-500"}>⚡</span> 
+                  <span className={isWin ? "text-green-500" : "text-red-500"}>
+                    ⚡
+                  </span>
                   Test Results
                 </h3>
                 <p className="text-[10px] text-gray-500 uppercase tracking-wider">
@@ -102,7 +118,7 @@ const LevelUpgradePopup = ({
             </div>
 
             {/* Result Cards Row */}
-            <div className="flex gap-4 mb-auto">
+            <div className="flex gap-4 mb-auto overflow-x-auto pb-2">
               {slots.map((status, index) => {
                 let cardClass = "border-gray-800 bg-[#161616]";
                 let icon = <div className="w-2 h-2 rounded-full bg-gray-700" />;
@@ -111,27 +127,35 @@ const LevelUpgradePopup = ({
 
                 if (status === "passed") {
                   cardClass = "border-green-500/50 bg-green-500/10";
-                  icon = <Check className="w-8 h-8 text-green-500 drop-shadow-[0_0_8px_rgba(34,197,94,0.8)]" />;
+                  icon = (
+                    <Check className="w-8 h-8 text-green-500 drop-shadow-[0_0_8px_rgba(34,197,94,0.8)]" />
+                  );
                   glow = "shadow-[0_0_30px_-10px_rgba(34,197,94,0.3)]";
                   barColor = "bg-green-500";
                 } else if (status === "failed") {
-                  cardClass = "border-orange-500/50 bg-orange-500/10";
-                  icon = <X className="w-8 h-8 text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.8)]" />;
-                  glow = "shadow-[0_0_30px_-10px_rgba(249,115,22,0.3)]";
-                  barColor = "bg-orange-500";
+                  // ✅ สีแดงเมื่อสอบตก (Red Logic)
+                  cardClass = "border-red-500/50 bg-red-500/10";
+                  icon = (
+                    <X className="w-8 h-8 text-red-500 drop-shadow-[0_0_8px_rgba(220,38,38,0.8)]" />
+                  );
+                  glow = "shadow-[0_0_30px_-10px_rgba(220,38,38,0.3)]";
+                  barColor = "bg-red-500";
                 }
 
                 return (
                   <div
                     key={index}
-                    className={`w-24 h-32 rounded-xl border-2 flex items-center justify-center transition-all duration-300 relative ${cardClass} ${glow}`}
+                    // ✅ ใช้ min-w-[5rem] เพื่อให้รองรับ 5 ช่องได้สวยงามไม่บีบเกินไป
+                    className={`min-w-[5rem] h-32 rounded-xl border-2 flex items-center justify-center transition-all duration-300 relative ${cardClass} ${glow}`}
                   >
                     <span className="absolute top-2 right-3 text-[10px] text-gray-600 font-mono">
                       {index + 1}
                     </span>
                     {icon}
                     {status !== "pending" && (
-                       <div className={`absolute bottom-3 w-8 h-1 rounded-full ${barColor}`} />
+                      <div
+                        className={`absolute bottom-3 w-8 h-1 rounded-full ${barColor}`}
+                      />
                     )}
                   </div>
                 );
@@ -140,25 +164,41 @@ const LevelUpgradePopup = ({
 
             {/* Footer Buttons */}
             <div className="flex items-center justify-between mt-8 pt-8 border-t border-gray-800">
-              <button
-                onClick={onBack}
-                className="text-xs font-bold text-gray-500 hover:text-white transition-colors flex items-center gap-2 px-4 py-2"
-              >
-                &lt; BACK
-              </button>
+              {isLevelComplete ? (
+                <div className="w-full flex justify-center">
+                  <button
+                    onClick={onHome}
+                    className="bg-yellow-600 hover:bg-yellow-500 text-white px-8 py-3 rounded-xl font-black text-sm tracking-wide transition-all duration-200 transform hover:scale-105 active:scale-95 flex items-center gap-2 shadow-[0_0_20px_rgba(202,138,4,0.4)]"
+                  >
+                    <Home className="w-4 h-4" />
+                    BACK TO HOME
+                  </button>
+                </div>
+              ) : (
+                // ถ้ายังไม่ครบ ให้โชว์ปุ่มเดิม (Back และ Next/Try Again)
+                <>
+                  <button
+                    onClick={onBack}
+                    className="text-xs font-bold text-gray-500 hover:text-white transition-colors flex items-center gap-2 px-4 py-2"
+                  >
+                    &lt; BACK
+                  </button>
 
-              <button
-                onClick={onNext}
-                className={`
-                  px-8 py-3 rounded-xl font-black text-sm tracking-wide transition-all duration-200 transform hover:scale-105 active:scale-95 flex items-center gap-2
-                  ${isWin 
-                    ? "bg-lime-400 text-black shadow-[0_0_20px_rgba(163,230,53,0.4)] hover:bg-lime-300" 
-                    : "bg-red-600 text-white shadow-[0_0_20px_rgba(220,38,38,0.4)] hover:bg-red-500"
-                  }
-                `}
-              >
-                {isWin ? "NEXT EXAM >" : "TRY AGAIN"}
-              </button>
+                  <button
+                    onClick={onNext}
+                    className={`
+                      px-8 py-3 rounded-xl font-black text-sm tracking-wide transition-all duration-200 transform hover:scale-105 active:scale-95 flex items-center gap-2
+                      ${
+                        isWin
+                          ? "bg-lime-400 text-black shadow-[0_0_20px_rgba(163,230,53,0.4)] hover:bg-lime-300"
+                          : "bg-red-600 text-white shadow-[0_0_20px_rgba(220,38,38,0.4)] hover:bg-red-500"
+                      }
+                    `}
+                  >
+                    {isWin ? "NEXT EXAM >" : "TRY AGAIN"}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </motion.div>

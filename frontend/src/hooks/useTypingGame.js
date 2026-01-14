@@ -26,6 +26,9 @@ export const useTypingGame = (mode, levelId, language) => {
   
   // State เช็คผลแพ้ชนะ
   const [isWin, setIsWin] = useState(false); 
+
+  // ✅ [แก้ไขจุดที่ 1] เพิ่ม State เก็บประวัติ
+  const [history, setHistory] = useState([]); 
   
   const [finalStats, setFinalStats] = useState({
     wpm: 0,
@@ -87,6 +90,10 @@ export const useTypingGame = (mode, levelId, language) => {
   useEffect(() => {
     setTargetText(getLevelContent()); 
     setPassedCount(0);
+    
+    // ✅ [แก้ไขจุดที่ 2] ล้างประวัติเมื่อเปลี่ยนด่าน
+    setHistory([]);
+
     resetRound();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [levelId, language]); 
@@ -184,21 +191,38 @@ export const useTypingGame = (mode, levelId, language) => {
       setFinalStats({ ...stats, isPassed: isPassCriteria });  
       setIsWin(isPassCriteria);
 
+      // 🔥 [แก้ไขจุดนี้] Logic การบันทึก History ตามโจทย์:
+      // 1. ถ้า "ผ่าน" (isPassCriteria เป็น true) -> ให้บันทึกเสมอ (เริ่มนับ 1 หรือนับต่อ)
+      // 2. ถ้า "ไม่ผ่าน" -> จะบันทึกก็ต่อเมื่อ "เคยผ่านมาก่อนแล้ว" (passedCount > 0)
+      
+      if (isPassCriteria) {
+         // กรณีสอบผ่าน: บันทึกเลย
+         setHistory(prev => [...prev, true]);
+      } else {
+         // กรณีสอบตก:
+         if (passedCount > 0) {
+            // เคยผ่านมาก่อนแล้ว -> บันทึกว่าเป็นกากบาทแดง
+            setHistory(prev => [...prev, false]);
+         } else {
+            // ยังไม่เคยผ่านเลย (passedCount == 0) -> ไม่ต้องบันทึกอะไรเลย
+         }
+      }
+
+      // ----------------------------------------------------
+
       let nextPassedCount = passedCount;
 
       if (isPassCriteria) {
         console.log("Passed! Checking count...");
         
-        // ถ้ายังไม่ครบ 3 ให้บวกเพิ่ม
         if (passedCount < PASS_TARGET) {
            nextPassedCount = passedCount + 1;
            setPassedCount(nextPassedCount);
         }
 
-        // 🔥 เช็คเงื่อนไขตรงนี้เลย: ถ้าครบ 3 รอบ (หรือมากกว่า) ให้บันทึกทันที!
         if (nextPassedCount >= PASS_TARGET) {
              console.log("Target Reached! Saving to backend...");
-             saveProgressToBackend(stats); // ส่ง stats เข้าไปบันทึกเลย
+             saveProgressToBackend(stats);
         }
 
       } else {
@@ -333,5 +357,8 @@ export const useTypingGame = (mode, levelId, language) => {
     resetRound,
     setShowSummary,
     removeFloater,
+    
+    // ✅ [แก้ไขจุดที่ 4] ส่ง history ออกไป
+    history, 
   };
 };
