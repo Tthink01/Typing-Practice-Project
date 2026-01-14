@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion"; // eslint-disable-line no-unused-vars
-import { Check, X, Trophy, Home } from "lucide-react";
+import { Check, X, Trophy, Home, AlertTriangle } from "lucide-react";
 
 const LevelUpgradePopup = ({
   isOpen,
@@ -25,6 +25,9 @@ const LevelUpgradePopup = ({
   const TOTAL_SLOTS = 5;
 
   const isLevelComplete = passCount >= targetCount;
+
+  // นับจำนวนครั้งที่ผิด
+  const failCount = history.filter((result) => result === false).length;
 
   // คำนวณสถานะของแต่ละช่องจาก history
   const slots = useMemo(() => {
@@ -133,7 +136,6 @@ const LevelUpgradePopup = ({
                   glow = "shadow-[0_0_30px_-10px_rgba(34,197,94,0.3)]";
                   barColor = "bg-green-500";
                 } else if (status === "failed") {
-                  // ✅ สีแดงเมื่อสอบตก (Red Logic)
                   cardClass = "border-red-500/50 bg-red-500/10";
                   icon = (
                     <X className="w-8 h-8 text-red-500 drop-shadow-[0_0_8px_rgba(220,38,38,0.8)]" />
@@ -145,7 +147,6 @@ const LevelUpgradePopup = ({
                 return (
                   <div
                     key={index}
-                    // ✅ ใช้ min-w-[5rem] เพื่อให้รองรับ 5 ช่องได้สวยงามไม่บีบเกินไป
                     className={`min-w-[5rem] h-32 rounded-xl border-2 flex items-center justify-center transition-all duration-300 relative ${cardClass} ${glow}`}
                   >
                     <span className="absolute top-2 right-3 text-[10px] text-gray-600 font-mono">
@@ -162,6 +163,16 @@ const LevelUpgradePopup = ({
               })}
             </div>
 
+            {/* 🔥🔥🔥 ส่วนที่เพิ่ม: ข้อความเตือนเมื่อผิดครบ 3 ครั้ง 🔥🔥🔥 */}
+            {failCount >= 3 && (
+              <div className="mt-4 w-full flex justify-center animate-bounce">
+                <div className="flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/50 rounded-lg text-red-500 font-bold shadow-[0_0_15px_rgba(220,38,38,0.2)]">
+                  <AlertTriangle className="w-5 h-5" />
+                  <span>ไม่ผ่าน 3 รอบ! ระบบจะทำการรีเซ็ต!</span>
+                </div>
+              </div>
+            )}
+
             {/* Footer Buttons */}
             <div className="flex items-center justify-between mt-8 pt-8 border-t border-gray-800">
               {isLevelComplete ? (
@@ -175,7 +186,6 @@ const LevelUpgradePopup = ({
                   </button>
                 </div>
               ) : (
-                // ถ้ายังไม่ครบ ให้โชว์ปุ่มเดิม (Back และ Next/Try Again)
                 <>
                   <button
                     onClick={onBack}

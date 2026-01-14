@@ -53,11 +53,10 @@ const GameContent = () => {
 
     // กรณี 2: ถ้าแพ้
     // เช็คว่าเคยผ่านมาก่อนไหม? (passedCount > 0)
-    if (passedCount > 0) {
-       // เคยผ่านแล้ว -> เปิด Popup (เพื่อให้เห็นกากบาทแดงต่อจากช่องเขียว)
+    if (passedCount > 0 || history.length > 0) { // ✅ เพิ่ม || history.length > 0
        setShowUpgradePopup(true);
     } else {
-       // ยังไม่เคยผ่านเลย (ครั้งแรก หรือ ตกซ้ำๆ ตั้งแต่เริ่ม) -> รีเซ็ตเลย ไม่โชว์ Popup
+       // ยังไม่เคยผ่านเลยสักครั้ง (และไม่มีประวัติค้าง) -> รีเซ็ตเลย ไม่โชว์ Popup
        handleRestart();
     }
   };
