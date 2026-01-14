@@ -35,7 +35,7 @@ export const useTypingGame = (mode, levelId, language) => {
   const timerRef = useRef(null);
   const startTimeRef = useRef(null);
 
-  // ✅ สร้าง Ref เพื่อเก็บข้อความที่พิมพ์ (แก้บั๊ก Timer หยุดเดิน)
+  // Ref เพื่อเก็บข้อความที่พิมพ์ (แก้บั๊ก Timer หยุดเดิน)
   const userInputRefState = useRef(""); 
 
   // --- Helpers ---
@@ -73,7 +73,7 @@ export const useTypingGame = (mode, levelId, language) => {
     return selectedWords.join(" ");
   }, [mode, levelId, language]);
 
-  // ✅ Sync State to Ref
+  // Sync State to Ref
   useEffect(() => {
     userInputRefState.current = userInput;
   }, [userInput]);
@@ -98,8 +98,15 @@ export const useTypingGame = (mode, levelId, language) => {
     setFloaters([]);
     startTimeRef.current = null;
     setShowSummary(false); 
+    
+    // ✅ เพิ่ม Logic: ถ้า passedCount เป็น 0 (โดนรีเซ็ต หรือ เริ่มใหม่) ให้ล้าง history ด้วย
+    // เพื่อให้ตอนกด Try Again หลังจาก Game Over กากบาทจะหายไป เริ่มนับใหม่
+    if (passedCount === 0) {
+        setHistory([]);
+    }
+
     setTimeout(() => inputRef.current?.focus(), 50);
-  }, [TIME_LIMIT, getLevelContent]); 
+  }, [TIME_LIMIT, getLevelContent, passedCount]); // ✅ เพิ่ม passedCount ใน dependency
 
   const saveProgressToBackend = (currentStats) => {
     const cleanMode = mode ? mode.toLowerCase() : "basic";
@@ -133,7 +140,7 @@ export const useTypingGame = (mode, levelId, language) => {
   };
 
   // ------------------------------------------------------------------
-  // handleLevelComplete
+  // handleLevelComplete (เพิ่ม Logic 3 Strikes Reset)
   // ------------------------------------------------------------------
   const handleLevelComplete = useCallback(
     (stats) => {
@@ -147,17 +154,26 @@ export const useTypingGame = (mode, levelId, language) => {
       setFinalStats({ ...stats, isPassed: isPassCriteria });  
       setIsWin(isPassCriteria);
 
+      // --- สร้าง History ใหม่จำลองขึ้นมาก่อน ---
+      let nextHistory = [...history];
+
       if (isPassCriteria) {
-          setHistory(prev => [...prev, true]);
+          nextHistory.push(true);
       } else {
-          if (passedCount > 0) {
-             setHistory(prev => [...prev, false]);
+          // ถ้าตก: บันทึกเมื่อเคยผ่านมาก่อน หรือ มีประวัติอยู่แล้ว (เช่น ตกครั้งที่ 2, 3)
+          if (passedCount > 0 || history.length > 0) {
+             nextHistory.push(false);
           }
       }
 
-      let nextPassedCount = passedCount;
+      setHistory(nextHistory); // อัปเดต State จริง
+
+      // นับจำนวนครั้งที่ตก (False)
+      const failCount = nextHistory.filter(h => h === false).length;
 
       if (isPassCriteria) {
+        // --- กรณีผ่าน ---
+        let nextPassedCount = passedCount;
         if (passedCount < PASS_TARGET) {
            nextPassedCount = passedCount + 1;
            setPassedCount(nextPassedCount);
@@ -165,14 +181,22 @@ export const useTypingGame = (mode, levelId, language) => {
         if (nextPassedCount >= PASS_TARGET) {
              saveProgressToBackend(stats);
         }
+      } else {
+        // --- กรณีตก ---
+        // ✅ ถ้าผิดครบ 3 ครั้ง ให้รีเซ็ต passedCount เป็น 0
+        if (failCount >= 3) {
+            console.log("Game Over: 3 Strikes! Resetting passedCount.");
+            setPassedCount(0);
+        }
       }
+
       setShowSummary(true);
     },
-    [config, PASS_TARGET, passedCount, mode, levelId, language]
+    [config, PASS_TARGET, passedCount, mode, levelId, language, history] // ✅ เพิ่ม history ใน dependency
   );
 
   // ------------------------------------------------------------------
-  // handleRoundFail (แก้บั๊ก Timer หยุดเดิน)
+  // handleRoundFail
   // ------------------------------------------------------------------
   const handleRoundFail = useCallback(() => {
     setIsGameActive(false);
@@ -180,8 +204,6 @@ export const useTypingGame = (mode, levelId, language) => {
     clearInterval(timerRef.current);
 
     const elapsedMin = TIME_LIMIT / 60;
-    
-    // ✅ ใช้ค่าจาก Ref แทน State โดยตรง (เพื่อไม่ให้ Function ถูกสร้างใหม่ตอนพิมพ์)
     const currentInput = userInputRefState.current; 
 
     const currentWpm = Math.round(currentInput.length / 5 / elapsedMin);
@@ -207,7 +229,7 @@ export const useTypingGame = (mode, levelId, language) => {
 
     handleLevelComplete(stats);
 
-  }, [TIME_LIMIT, targetText, handleLevelComplete]); // ❌ ลบ userInput ออกแล้ว
+  }, [TIME_LIMIT, targetText, handleLevelComplete]); 
 
   // Timer Counting
   useEffect(() => {
