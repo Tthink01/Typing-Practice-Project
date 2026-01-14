@@ -1,13 +1,12 @@
 import React from "react";
-import { useParams, useNavigate,useLocation } from "react-router-dom";
-
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 
 // Components
 import Floater from "../components/Shared/Floater";
-import SummaryPopup from "../components/Shared/SummaryPopup";
+import LevelUpgradePopup from "../components/Practice/LevelUpgadePopup"; 
 import TypingDisplay from "../components/Practice/TypingDisplay"; 
 import GameInfo from "../components/Practice/GameInfo";         
-import { useTypingGame } from "../hooks/useTypingGame"; // ✅ เรียกใช้ Hook
+import { useTypingGame } from "../hooks/useTypingGame"; 
 
 // ----------------------------------------------------------------------
 // ส่วนที่ 1: GameContent (UI ล้วนๆ)
@@ -15,13 +14,10 @@ import { useTypingGame } from "../hooks/useTypingGame"; // ✅ เรียก�
 const GameContent = () => {
   const { mode, levelId } = useParams();
   const navigate = useNavigate();
-
-  // ✅ 1. รับค่าภาษาที่ส่งมาจาก HomePage
   const location = useLocation();
-  const language = location.state?.language || "TH"; // ถ้าไม่มีให้ Default เป็น TH
-  
+  const language = location.state?.language || "TH"; 
 
-  // ✅ เรียก Logic ทั้งหมดจาก Hook บรรทัดเดียวจบ
+  // เรียก Logic จาก Hook
   const {
     targetText,
     userInput,
@@ -29,18 +25,19 @@ const GameContent = () => {
     passedCount,
     floaters,
     showSummary,
-    finalStats,
+    // finalStats, // ตัวแปรนี้ไม่ได้ใช้ใน Popup ใหม่ แต่เก็บไว้เผื่ออนาคต
     PASS_TARGET,
     TIME_LIMIT,
     inputRef,
-    isWin,
+    isWin, // ✅ ต้องใช้ตัวนี้ส่งไปบอก Popup ว่ารอบนี้ผ่านไหม
     handleInputChange,
     resetRound,
-    // setShowSummary,
     removeFloater
   } = useTypingGame(mode, levelId, language);
 
   const handleNextAction = () => {
+    // ถ้าผ่านครบแล้ว (passedCount >= PASS_TARGET) อาจจะให้ไปหน้าเลือกด่าน หรือด่านถัดไป
+    // แต่เบื้องต้นให้ Reset เพื่อเล่นต่อ หรือเริ่มใหม่ตาม Logic เดิม
     resetRound();
   };
 
@@ -97,31 +94,24 @@ const GameContent = () => {
         />
       ))}
 
-      {/* Summary Popup */}
+      {/* ✅ แก้ไขตรงนี้: ใช้ LevelUpgradePopup แทน SummaryPopup */}
       {showSummary && (
-        <SummaryPopup
-          stats={finalStats}
-          isWin={isWin}
-          
-          onRetry={resetRound}
-          onNext={handleNextAction}
-          onHome={() => navigate('/')}
-          
-          isLevelMode={true}
-          currentCount={passedCount}
-          targetCount={PASS_TARGET}
+        <LevelUpgradePopup
+          isOpen={showSummary}
+          onNext={handleNextAction}   // ปุ่ม Next Exam / Try Again จะเรียกฟังก์ชันนี้
+          onBack={() => navigate('/')} // ปุ่ม Back
+          passCount={passedCount}      // ส่งจำนวนที่ผ่านไป (เพื่อโชว์ 1/3, 2/3)
+          targetCount={PASS_TARGET}    // เป้าหมาย (3)
+          isWin={isWin}                // ผลรอบล่าสุด (เพื่อโชว์ติ๊กถูกเขียว หรือ กากบาทแดง)
         />
       )}
+      
     </div>
   );
 };
 
-// ----------------------------------------------------------------------
-// ส่วนที่ 2: GamePage Wrapper
-// ----------------------------------------------------------------------
 const GamePage = () => {
   const { mode, levelId } = useParams();
-  // ใช้ key เพื่อให้ Hook รีเซ็ตตัวเองเมื่อเปลี่ยนด่าน
   return <GameContent key={`${mode}-${levelId}`} />;
 };
 
