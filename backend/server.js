@@ -11,7 +11,7 @@ app.use(express.json());
 // ใส่ URL ของ Frontend ที่คุณ Deploy เสร็จแล้วลงไปใน array นี้
 const allowedOrigins = [
   "http://localhost:5173", // สำหรับรันในเครื่อง
-  "https://typing-practice-ogdr.onrender.com/" // ⚠️ อย่าลืมแก้ตรงนี้เป็น Link Frontend จริง
+  "https://typing-practice-ogdr.onrender.com" // ⚠️ อย่าลืมแก้ตรงนี้เป็น Link Frontend จริง
 ];
 
 app.use(cors({
