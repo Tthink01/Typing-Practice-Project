@@ -2,9 +2,13 @@ import React from "react";
 import { ChevronLeft, RefreshCw, Clock } from "lucide-react";
 
 const GameInfo = ({ 
-  mode, levelId, onBack, 
-  passedCount, passTarget, 
-  timeLeft, onReset 
+  mode, 
+  levelId, 
+  onBack, 
+  passedCount, 
+  passTarget, 
+  timeLeft, 
+  onRetry // ✅ 1. แก้ชื่อตรงนี้จาก onReset เป็น onRetry (ให้ตรงกับไฟล์แม่)
 }) => {
   return (
     <>
@@ -35,7 +39,13 @@ const GameInfo = ({
             00:{timeLeft < 10 ? `0${timeLeft}` : timeLeft}
           </span>
         </div>
-        <button onClick={onReset} className="ml-auto p-2 text-stone-600 hover:text-stone-300 transition-colors" title="เริ่มใหม่">
+        
+        {/* ✅ 2. และแก้ตรง onClick นี้ด้วยครับ */}
+        <button 
+            onClick={onRetry} 
+            className="ml-auto p-2 text-stone-600 hover:text-stone-300 transition-colors" 
+            title="เริ่มใหม่"
+        >
           <RefreshCw size={20} />
         </button>
       </div>

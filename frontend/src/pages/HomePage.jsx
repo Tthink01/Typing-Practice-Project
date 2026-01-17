@@ -7,6 +7,7 @@ import ModeCard from "../components/ModeCard";
 import WelcomeScreen from "./WelcomePage";
 import LevelSelectModal from "../components/LevelSelectModal"; // หรือ path ที่คุณเก็บไฟล์ index ของ Shared
 import HeroSection from "../components/Home/HeroSection";
+import PageTransition from "../components/Shared/PageTransition"; // นำเข้า
 
 // --- Data ---
 import { GAME_MODES } from "../data/gameMode.js";
@@ -213,6 +214,7 @@ const HomePage = () => {
   });
 
   return (
+    <PageTransition>
     <div className="h-full flex flex-col bg-[#0a0a0a] text-white relative overflow-hidden font-sans">
       {/* --- Layer 1: Welcome Screen --- */}
       {showWelcome && <WelcomeScreen onStart={handleStartGame} />}
@@ -309,6 +311,7 @@ const HomePage = () => {
         onSelect={handleLevelStart}
       />
     </div>
+    </PageTransition>
   );
 };
 

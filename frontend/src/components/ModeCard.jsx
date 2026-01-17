@@ -99,13 +99,21 @@ const ModeCard = ({ title, level, description, isLocked, helpText, type }) => {
           </div>
           
           {/* Help Icon */}
-          <div 
-            className="relative z-40 p-2 -mr-2 text-stone-600 hover:text-white transition-colors cursor-help"
-            onMouseEnter={() => setShowHelp(true)} 
-            onMouseLeave={() => setShowHelp(false)}
-          >
-            <HelpCircle size={28} />
-          </div>
+          <div
+  className={`
+    relative z-40 p-2.5 rounded-full border transition-all duration-300 cursor-help
+    ${type === 'basic' 
+      ? "border-lime-500/30 bg-stone-900/60 text-lime-400 hover:bg-lime-500/20 hover:shadow-[0_0_15px_rgba(132,204,22,0.5)]" 
+      : "border-orange-500/30 bg-stone-900/60 text-orange-400 hover:bg-orange-500/20 hover:shadow-[0_0_15px_rgba(249,115,22,0.5)]"
+    }
+  `}
+  onMouseEnter={() => setShowHelp(true)}
+  onMouseLeave={() => setShowHelp(false)}
+>
+  <HelpCircle size={24} />
+</div>
+
+          
         </div>
 
         {/* Text Info */}

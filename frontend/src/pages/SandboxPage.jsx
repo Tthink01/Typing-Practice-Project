@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, RefreshCw, Globe } from "lucide-react";
+import PageTransition from "../components/Shared/PageTransition"; // นำเข้า
 
 // Components
 import Navbar from "../components/Navbar";
@@ -158,17 +159,13 @@ const SandboxPage = () => {
   }, [isGameActive, showSummary, userInput, targetText, addFloater]);
 
   return (
+    
     <div className="w-full min-h-screen bg-stone-950 text-orange-50 font-sans flex flex-col relative overflow-hidden pt-20">
       {/* Background Effects */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
         <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-orange-600/10 rounded-full blur-[120px]"></div>
       </div>
 
-      
-      
-      {/* ✅ จุดที่แก้ไข: เพิ่ม mt-8 (ดันลงมา) และ z-20 (ให้อยู่เหนือ layer อื่น)
-         เปลี่ยนจาก pt-4 เป็น pt-8 หรือ mt-8 เพื่อหนี Navbar 
-      */}
       <div className="max-w-4xl mx-auto w-full h-full flex flex-col mt-8 relative z-20 px-4 flex-grow">
         
         {/* Header Control */}
@@ -300,14 +297,20 @@ const SandboxPage = () => {
         />
       ))}
 
+      {/* ✅✅✅ แก้ไขส่วน Popup ตรงนี้ครับ ✅✅✅ */}
       {showSummary && (
         <SummaryPopup 
-          stats={finalStats} 
-          onNext={() => startNewGame(lang)} 
+          stats={finalStats}
+          isWin={false} // ให้ถือว่าชนะ (แสดงสีเขียว)
+          onRetry={() => startNewGame(lang)} // ฟังก์ชันเริ่มใหม่
+          onHome={() => navigate("/")} // ฟังก์ชันกลับหน้าหลัก
+          onNext={() => startNewGame(lang)} // ปุ่มถัดไปก็ให้เริ่มใหม่เหมือนกัน
+          currentCount={0} // Sandbox ไม่ต้องใช้
         />
       )}
 
     </div>
+    
   );
 };
 

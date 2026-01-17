@@ -9,7 +9,6 @@ import {
   Keyboard,
 } from "lucide-react";
 
-
 const ActiveDot = () => (
   <span className="absolute -bottom-3 w-1.5 h-1.5 bg-orange-500 rounded-full shadow-[0_0_5px_rgba(249,115,22,0.8)]"></span>
 );
@@ -18,17 +17,44 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // --- Helper เช็ค Active Menu ---
-  const isPathActive = (path) => {
-    if (path === "/") {
-      return location.pathname === "/" && !location.state?.forceShowContent;
-    }
-    return location.pathname.startsWith(path);
+  // ==========================================
+  // 🔥 แก้ไข Logic การเช็ค Active Menu ใหม่
+  // ==========================================
+
+  // 1. เช็คว่าเป็นสถานะ "หน้าต้อนรับ" (Home Icon) หรือไม่?
+  const isWelcomeActive = () => {
+    // ต้องอยู่ที่ path "/" เท่านั้น
+    if (location.pathname !== "/") return false;
+
+    // ถ้ามีการสั่ง Force ผ่าน State ให้ยึดตาม State ก่อน
+    if (location.state?.forceShowWelcome) return true;
+    if (location.state?.forceShowContent) return false;
+
+    // ถ้าไม่มี State ให้เช็คจาก SessionStorage (เพื่อให้ตรงกับ Logic ใน HomePage)
+    // ถ้ายังไม่เคยเห็น Welcome -> ถือว่าเป็น Welcome Screen (ไฮไลท์บ้าน)
+    // ถ้าเคยเห็นแล้ว -> ถือว่าเป็นหน้า Content (ไม่ไฮไลท์บ้าน)
+    const hasSeenWelcome = sessionStorage.getItem("hasSeenWelcome");
+    return !hasSeenWelcome;
   };
 
-  const isPracticeActive = () => {
-    return location.pathname === "/" && location.state?.forceShowContent;
+  const isWelcome = isWelcomeActive();
+
+  // 2. เช็คว่าเป็นสถานะ "ฝึกฝน/เลือกด่าน" (Keyboard Icon) หรือไม่?
+  const isPractice = () => {
+    // ถ้ากำลังเล่นเกม (/game/...) ให้ถือว่าเป็น Practice ด้วย
+    if (location.pathname.startsWith("/game")) return true;
+
+    // ถ้าอยู่ที่ "/" และ *ไม่ใช่* หน้า Welcome -> แสดงว่าเป็นหน้าเลือกด่าน (ไฮไลท์คีย์บอร์ด)
+    if (location.pathname === "/" && !isWelcome) return true;
+
+    return false;
   };
+
+  // 3. เช็คว่าเป็นหน้า Sandbox (Type Icon) หรือไม่?
+  // ใช้ toLowerCase เผื่อกรณีพิมพ์ /Sandbox หรือ /sandbox
+  const isSandbox = location.pathname.toLowerCase() === "/sandbox";
+
+  // ==========================================
 
   // --- Auth Logic ---
   const [user, setUser] = useState(() => {
@@ -54,7 +80,7 @@ const Navbar = () => {
   };
 
   // Class Helper
-  const getMenuIconClass = (active) => 
+  const getMenuIconClass = (active) =>
     `transition-all duration-300 ${
       active
         ? "text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.4)]"
@@ -82,7 +108,7 @@ const Navbar = () => {
       <div className="absolute left-1/2 transform -translate-x-1/2">
         <div className="bg-[#27272a] border border-[#3f3f46] rounded-full px-8 md:px-12 py-3 md:py-4 flex items-center gap-8 md:gap-10 shadow-inner">
           
-          {/* ปุ่ม Home */}
+          {/* ปุ่ม Home (Welcome) */}
           <Link
             to="/"
             state={{ forceShowWelcome: true }}
@@ -91,12 +117,12 @@ const Navbar = () => {
           >
             <House
               size={22}
-              className={getMenuIconClass(isPathActive("/"))}
+              className={getMenuIconClass(isWelcome)}
             />
-            {isPathActive("/") && <ActiveDot />}
+            {isWelcome && <ActiveDot />}
           </Link>
 
-          {/* ปุ่ม Practice */}
+          {/* ปุ่ม Practice (Keyboard) */}
           <Link
             to="/"
             state={{ forceShowContent: true }}
@@ -105,12 +131,12 @@ const Navbar = () => {
           >
             <Keyboard
               size={26}
-              className={getMenuIconClass(isPracticeActive())}
+              className={getMenuIconClass(isPractice())}
             />
-            {isPracticeActive() && <ActiveDot />}
+            {isPractice() && <ActiveDot />}
           </Link>
 
-          {/* ปุ่ม Sandbox */}
+          {/* ปุ่ม Sandbox (Type) */}
           <Link
             to="/sandbox"
             title="โหมดพิมพ์อิสระ"
@@ -118,9 +144,9 @@ const Navbar = () => {
           >
             <Type
               size={22}
-              className={`${getMenuIconClass(isPathActive("/sandbox"))} ${isPathActive("/sandbox") ? "stroke-[2.5px]" : ""}`}
+              className={`${getMenuIconClass(isSandbox)} ${isSandbox ? "stroke-[2.5px]" : ""}`}
             />
-            {isPathActive("/sandbox") && <ActiveDot />}
+            {isSandbox && <ActiveDot />}
           </Link>
 
         </div>
