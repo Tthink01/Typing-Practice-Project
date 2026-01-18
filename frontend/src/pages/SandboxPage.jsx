@@ -142,10 +142,38 @@ const SandboxPage = () => {
                 if (avg > slow.time) slow = { char, time: avg };
             });
 
+            // 🔥 เราต้องแปลง Object เป็น Array เพื่อส่งไปให้ Popup วนลูปแสดงผล
+            // สร้างฟังก์ชันย่อย หรือ เขียนสดตรงนี้ก็ได้เพื่อให้ได้ List รายการ
+            const processStatsArray = () => {
+                const times = keyTimes.current;
+                const processed = Object.entries(times).map(([char, timeArr]) => {
+                   const avgTime = timeArr.reduce((a, b) => a + b, 0) / timeArr.length;
+                   return { char, time: Math.round(avgTime) };
+                });
+
+                // เรียงจากน้อยไปมาก (เร็วสุด)
+                processed.sort((a, b) => a.time - b.time);
+                
+                const fastArr = processed.slice(0, 3).map(k => ({...k, percent: 100})); // ปรับ percent ตามต้องการ
+                
+                // เรียงจากมากไปน้อย (ช้าสุด)
+                const slowArr = [...processed].sort((a, b) => b.time - a.time).slice(0, 3).map(k => ({...k, percent: 100}));
+
+                return { fastArr, slowArr };
+            };
+            
+            const { fastArr, slowArr } = processStatsArray();
+
             setFinalStats({
                 wpm,
                 accuracy,
                 wrongKeys: Array.from(wrongKeysRef.current),
+                
+                // ✅✅✅ เพิ่ม 2 บรรทัดนี้ครับ (สำคัญมาก!) ✅✅✅
+                fastestKeys: fastArr, 
+                slowestKeys: slowArr,
+                
+                // อันเดิม (ที่เป็นตัวเดียว) เก็บไว้ก็ได้ครับ แต่ Popup ตัวใหม่ใช้แบบ Array ด้านบน
                 fastestKey: fast.char !== '-' ? `${fast.char} (${Math.round(fast.time)}ms)` : '-',
                 slowestKey: slow.char !== '-' ? `${slow.char} (${Math.round(slow.time)}ms)` : '-'
             });
@@ -301,11 +329,13 @@ const SandboxPage = () => {
       {showSummary && (
         <SummaryPopup 
           stats={finalStats}
-          isWin={false} // ให้ถือว่าชนะ (แสดงสีเขียว)
-          onRetry={() => startNewGame(lang)} // ฟังก์ชันเริ่มใหม่
-          onHome={() => navigate("/")} // ฟังก์ชันกลับหน้าหลัก
-          onNext={() => startNewGame(lang)} // ปุ่มถัดไปก็ให้เริ่มใหม่เหมือนกัน
-          currentCount={0} // Sandbox ไม่ต้องใช้
+          isWin={true} 
+          onRetry={() => startNewGame(lang)} 
+          onHome={() => navigate("/")} 
+          onNext={() => startNewGame(lang)} 
+          currentCount={0}
+          
+          isSandbox={true} // 👈 เพิ่มบรรทัดนี้ครับ
         />
       )}
 
