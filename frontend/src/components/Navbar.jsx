@@ -96,6 +96,7 @@ const Navbar = () => {
         const isUnlocked = completedCount >= totalLevels && totalLevels > 0;
         setIsCertificateUnlocked(isUnlocked);
         
+        
       } catch (error) {
         console.error("❌ Error fetching progress:", error);
         // กรณี Error (ต่อ DB ไม่ติด) ให้ปิดปุ่มไว้ก่อน หรือจะ Fallback ไป LocalStorage ก็ได้
