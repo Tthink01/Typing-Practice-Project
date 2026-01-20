@@ -9,6 +9,9 @@ import {
   Keyboard,
 } from "lucide-react";
 
+import axios from "axios"; // ✅ ต้องมี axios
+import { EXERCISES_DATA } from "../data/exercises";
+
 const ActiveDot = () => (
   <span className="absolute -bottom-3 w-1.5 h-1.5 bg-orange-500 rounded-full shadow-[0_0_5px_rgba(249,115,22,0.8)]"></span>
 );
@@ -17,46 +20,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // ==========================================
-  // 🔥 แก้ไข Logic การเช็ค Active Menu ใหม่
-  // ==========================================
-
-  // 1. เช็คว่าเป็นสถานะ "หน้าต้อนรับ" (Home Icon) หรือไม่?
-  const isWelcomeActive = () => {
-    // ต้องอยู่ที่ path "/" เท่านั้น
-    if (location.pathname !== "/") return false;
-
-    // ถ้ามีการสั่ง Force ผ่าน State ให้ยึดตาม State ก่อน
-    if (location.state?.forceShowWelcome) return true;
-    if (location.state?.forceShowContent) return false;
-
-    // ถ้าไม่มี State ให้เช็คจาก SessionStorage (เพื่อให้ตรงกับ Logic ใน HomePage)
-    // ถ้ายังไม่เคยเห็น Welcome -> ถือว่าเป็น Welcome Screen (ไฮไลท์บ้าน)
-    // ถ้าเคยเห็นแล้ว -> ถือว่าเป็นหน้า Content (ไม่ไฮไลท์บ้าน)
-    const hasSeenWelcome = sessionStorage.getItem("hasSeenWelcome");
-    return !hasSeenWelcome;
-  };
-
-  const isWelcome = isWelcomeActive();
-
-  // 2. เช็คว่าเป็นสถานะ "ฝึกฝน/เลือกด่าน" (Keyboard Icon) หรือไม่?
-  const isPractice = () => {
-    // ถ้ากำลังเล่นเกม (/game/...) ให้ถือว่าเป็น Practice ด้วย
-    if (location.pathname.startsWith("/game")) return true;
-
-    // ถ้าอยู่ที่ "/" และ *ไม่ใช่* หน้า Welcome -> แสดงว่าเป็นหน้าเลือกด่าน (ไฮไลท์คีย์บอร์ด)
-    if (location.pathname === "/" && !isWelcome) return true;
-
-    return false;
-  };
-
-  // 3. เช็คว่าเป็นหน้า Sandbox (Type Icon) หรือไม่?
-  // ใช้ toLowerCase เผื่อกรณีพิมพ์ /Sandbox หรือ /sandbox
-  const isSandbox = location.pathname.toLowerCase() === "/sandbox";
-
-  // ==========================================
-
-  // --- Auth Logic ---
+  // --- Auth Logic (ย้ายขึ้นมาเพื่อให้ useEffect เรียกใช้ user ได้) ---
   const [user, setUser] = useState(() => {
     const storedUser = localStorage.getItem("currentUser");
     return storedUser ? JSON.parse(storedUser) : null;
@@ -78,6 +42,69 @@ const Navbar = () => {
       navigate("/login");
     }
   };
+
+  // ==========================================
+  // 🔥 Logic เช็ค Active Menu
+  // ==========================================
+  const isWelcomeActive = () => {
+    if (location.pathname !== "/") return false;
+    if (location.state?.forceShowWelcome) return true;
+    if (location.state?.forceShowContent) return false;
+    const hasSeenWelcome = sessionStorage.getItem("hasSeenWelcome");
+    return !hasSeenWelcome;
+  };
+  const isWelcome = isWelcomeActive();
+
+  const isPractice = () => {
+    if (location.pathname.startsWith("/game")) return true;
+    if (location.pathname === "/" && !isWelcome) return true;
+    return false;
+  };
+
+  const isSandbox = location.pathname.toLowerCase() === "/sandbox";
+  const isCertificate = location.pathname.toLowerCase() === "/certificate";
+
+  // ==========================================
+  // 🏆 Logic เช็ค Certificate จาก "ฐานข้อมูล (Database)"
+  // ==========================================
+  const [isCertificateUnlocked, setIsCertificateUnlocked] = useState(false);
+
+  useEffect(() => {
+    const checkProgressFromDB = async () => {
+      // 1. นับจำนวนด่านทั้งหมด (Client Side Calculation)
+      let totalLevels = 0;
+      if (EXERCISES_DATA["normal"]?.["TH"]) totalLevels += EXERCISES_DATA["normal"]["TH"].length;
+      if (EXERCISES_DATA["normal"]?.["EN"]) totalLevels += EXERCISES_DATA["normal"]["EN"].length;
+
+      // ถ้ายังไม่ Login ไม่ต้องเช็ค -> ปิดปุ่ม
+      if (!user) {
+        setIsCertificateUnlocked(false);
+        return;
+      }
+
+      try {
+        // ✅ 2. ยิง API ไปถาม Database แทนการอ่าน LocalStorage
+        // เปลี่ยน URL 'http://localhost:5000' ให้ตรงกับ Server ของคุณ
+        const response = await axios.get(`http://localhost:5000/api/users/${user.username}/progress`);
+        
+        // สมมติว่า Backend ส่งกลับมาเป็น: { completedLevels: ["th-1", "th-2", ...], ... }
+        const completedLevels = response.data.completedLevels || [];
+        const completedCount = completedLevels.length;
+
+        // 3. เปรียบเทียบ
+        // ถ้าเล่นครบทุกด่าน (และมีด่านให้เล่น) -> ปลดล็อค
+        const isUnlocked = completedCount >= totalLevels && totalLevels > 0;
+        setIsCertificateUnlocked(isUnlocked);
+        
+      } catch (error) {
+        console.error("❌ Error fetching progress:", error);
+        // กรณี Error (ต่อ DB ไม่ติด) ให้ปิดปุ่มไว้ก่อน หรือจะ Fallback ไป LocalStorage ก็ได้
+        setIsCertificateUnlocked(false);
+      }
+    };
+
+    checkProgressFromDB();
+  }, [location, user]); // เช็คใหม่เมื่อเปลี่ยนหน้า หรือ user เปลี่ยน
 
   // Class Helper
   const getMenuIconClass = (active) =>
@@ -108,46 +135,52 @@ const Navbar = () => {
       <div className="absolute left-1/2 transform -translate-x-1/2">
         <div className="bg-[#27272a] border border-[#3f3f46] rounded-full px-8 md:px-12 py-3 md:py-4 flex items-center gap-8 md:gap-10 shadow-inner">
           
-          {/* ปุ่ม Home (Welcome) */}
           <Link
             to="/"
             state={{ forceShowWelcome: true }}
             title="หน้าต้อนรับ"
             className="relative flex flex-col items-center justify-center group"
           >
-            <House
-              size={22}
-              className={getMenuIconClass(isWelcome)}
-            />
+            <House size={22} className={getMenuIconClass(isWelcome)} />
             {isWelcome && <ActiveDot />}
           </Link>
 
-          {/* ปุ่ม Practice (Keyboard) */}
           <Link
             to="/"
             state={{ forceShowContent: true }}
             title="เลือกแบบฝึกหัด"
             className="relative flex flex-col items-center justify-center group"
           >
-            <Keyboard
-              size={26}
-              className={getMenuIconClass(isPractice())}
-            />
+            <Keyboard size={26} className={getMenuIconClass(isPractice())} />
             {isPractice() && <ActiveDot />}
           </Link>
 
-          {/* ปุ่ม Sandbox (Type) */}
           <Link
             to="/sandbox"
             title="โหมดพิมพ์อิสระ"
             className="relative flex flex-col items-center justify-center group"
           >
-            <Type
-              size={22}
-              className={`${getMenuIconClass(isSandbox)} ${isSandbox ? "stroke-[2.5px]" : ""}`}
-            />
+            <Type size={22} className={`${getMenuIconClass(isSandbox)} ${isSandbox ? "stroke-[2.5px]" : ""}`} />
             {isSandbox && <ActiveDot />}
           </Link>
+
+          {/* ✅ ปุ่ม Certificate (โชว์เมื่อ Database บอกว่าครบ) */}
+          {isCertificateUnlocked && (
+            <Link
+              to="/certificate"
+              title="รับใบประกาศนียบัตร"
+              className="relative flex flex-col items-center justify-center group animate-fade-in"
+            >
+              <GraduationCap
+                size={24}
+                className={`${getMenuIconClass(isCertificate)} ${isCertificate ? "stroke-[2.5px]" : ""}`}
+              />
+              {isCertificate && <ActiveDot />}
+              {!isCertificate && (
+                 <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+              )}
+            </Link>
+          )}
 
         </div>
       </div>

@@ -11,6 +11,7 @@ import PracticePage from './pages/PracticePage';
 import Navbar from "./components/Navbar";
 import AdminTools from './components/Admin/AdminTools';
 import PageTransition from "./components/Shared/PageTransition";
+import CertificatePage from "./pages/CertificatePage";
 
 const PAGE_DEPTHS = {
   "/": 0,
@@ -71,6 +72,7 @@ const AnimatedRoutes = () => {
         <Route path="/login" element={<PageTransition direction={navState.direction}><LoginPage /></PageTransition>} />
         <Route path="/admin" element={<PageTransition direction={navState.direction}><AdminPage /></PageTransition>} />
         <Route path="/game/:mode/:levelId" element={<PageTransition direction={navState.direction}><PracticePage /></PageTransition>} />
+        <Route path="/certificate" element={<CertificatePage />} />
 
       </Routes>
     </AnimatePresence>

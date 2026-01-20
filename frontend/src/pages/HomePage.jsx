@@ -214,7 +214,7 @@ const HomePage = () => {
   });
 
   return (
-    <PageTransition>
+    
     <div className="h-full flex flex-col bg-[#0a0a0a] text-white relative overflow-hidden font-sans">
       {/* --- Layer 1: Welcome Screen --- */}
       {showWelcome && <WelcomeScreen onStart={handleStartGame} />}
@@ -311,7 +311,7 @@ const HomePage = () => {
         onSelect={handleLevelStart}
       />
     </div>
-    </PageTransition>
+    
   );
 };
 

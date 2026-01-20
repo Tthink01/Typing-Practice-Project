@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo,  } from "react";
 import { motion, AnimatePresence } from "framer-motion"; // eslint-disable-line no-unused-vars
 import { Check, X, Trophy, Home, AlertTriangle } from "lucide-react";
 
@@ -17,9 +17,9 @@ const LevelUpgradePopup = ({
   // -------------------------------------------------------
 
   // สร้าง Session ID ครั้งเดียว
-  const [sessionID] = useState(() =>
-    Math.random().toString(36).substr(2, 6).toUpperCase()
-  );
+  // const [sessionID] = useState(() =>
+  //   Math.random().toString(36).substr(2, 6).toUpperCase()
+  // );
 
   // ✅ กำหนดจำนวนช่องเป็น 5 ช่อง (Fix ตายตัว)
   const TOTAL_SLOTS = 5;
@@ -61,12 +61,12 @@ const LevelUpgradePopup = ({
 
             <div>
               <div className="inline-block px-3 py-1 rounded-full border border-yellow-600/30 bg-yellow-900/20 text-yellow-500 text-[10px] font-bold tracking-wider mb-6">
-                ● LIVE EXAM MODE
+                ● PROMOTION EXAM
               </div>
               <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 to-yellow-700 mb-4 leading-tight">
-                LEVEL
+                สอบ
                 <br />
-                UPGRADE
+                เลื่อนระดับ
               </h2>
               <p className="text-gray-400 text-sm font-light">
                 พิสูจน์ความสามารถของคุณ
@@ -79,7 +79,7 @@ const LevelUpgradePopup = ({
             <div className="bg-[#2a2a2a]/50 rounded-xl p-4 border border-white/5 backdrop-blur-md">
               <div className="flex justify-between items-start mb-2">
                 <span className="text-[10px] font-bold text-yellow-600 uppercase tracking-widest">
-                  Current Status
+                  จำนวนรอบ
                 </span>
                 <Trophy className="w-4 h-4 text-gray-500" />
               </div>
@@ -112,11 +112,11 @@ const LevelUpgradePopup = ({
                   <span className={isWin ? "text-green-500" : "text-red-500"}>
                     ⚡
                   </span>
-                  Test Results
+                  ผลการทดสอบ
                 </h3>
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider">
+                {/* <p className="text-[10px] text-gray-500 uppercase tracking-wider">
                   SESSION ID: #{sessionID}
-                </p>
+                </p> */}
               </div>
             </div>
 
@@ -182,7 +182,7 @@ const LevelUpgradePopup = ({
                     className="bg-yellow-600 hover:bg-yellow-500 text-white px-8 py-3 rounded-xl font-black text-sm tracking-wide transition-all duration-200 transform hover:scale-105 active:scale-95 flex items-center gap-2 shadow-[0_0_20px_rgba(202,138,4,0.4)]"
                   >
                     <Home className="w-4 h-4" />
-                    BACK TO HOME
+                    กลับไปหน้าหลัก
                   </button>
                 </div>
               ) : (
@@ -191,7 +191,7 @@ const LevelUpgradePopup = ({
                     onClick={onBack}
                     className="text-xs font-bold text-gray-500 hover:text-white transition-colors flex items-center gap-2 px-4 py-2"
                   >
-                    &lt; BACK
+                    &lt; กลับ
                   </button>
 
                   <button
@@ -205,7 +205,7 @@ const LevelUpgradePopup = ({
                       }
                     `}
                   >
-                    {isWin ? "NEXT EXAM >" : "TRY AGAIN"}
+                    {isWin ? "ต่อไป >" : "ลองอีกครั้ง"}
                   </button>
                 </>
               )}
