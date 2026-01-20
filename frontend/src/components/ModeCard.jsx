@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Keyboard, HelpCircle, Lock, ArrowRight } from "lucide-react";
+import { Keyboard, HelpCircle, Lock, ArrowRight, X } from "lucide-react"; // ✅ เพิ่ม icon X
 
 const ModeCard = ({ title, level, description, isLocked, helpText, type }) => {
   const [showHelp, setShowHelp] = useState(false);
@@ -8,7 +8,7 @@ const ModeCard = ({ title, level, description, isLocked, helpText, type }) => {
   const isBasic = (type || "basic") === "basic";
   const contentText = helpText || "";
 
-  // ✅ 1. สร้างฟังก์ชันเลือกธีม เพื่อให้โค้ดดูง่ายขึ้น
+  // ✅ 1. ฟังก์ชันเลือกธีม (คงเดิม)
   const getTheme = () => {
     // --- กรณี A: การ์ดล็อค (Locked) ---
     if (isLocked) {
@@ -21,7 +21,6 @@ const ModeCard = ({ title, level, description, isLocked, helpText, type }) => {
         bgGradient: "from-stone-800/20 to-stone-900/5",
         button:
           "text-amber-500/80 border-amber-900/30 bg-stone-950/40 cursor-not-allowed",
-        // สีสำหรับ Popup Help ตอนล็อค
         helpIcon: "text-stone-500",
         helpTitle: "text-stone-500",
         helpBg: "bg-stone-800/20 border-stone-700/20",
@@ -41,7 +40,6 @@ const ModeCard = ({ title, level, description, isLocked, helpText, type }) => {
         bgGradient: "from-lime-500/10 to-transparent",
         button:
           "bg-gradient-to-r from-lime-600 to-lime-500 text-stone-950 shadow-lg shadow-lime-900/20 group-hover:scale-[1.02]",
-        // สีสำหรับ Popup Help
         helpIcon: "text-lime-400",
         helpTitle: "text-lime-400",
         helpBg: "bg-lime-900/20 border-lime-500/20",
@@ -49,7 +47,6 @@ const ModeCard = ({ title, level, description, isLocked, helpText, type }) => {
     }
 
     // --- กรณี C: ระดับโปร (Pro) -> สีทอง (Amber) ---
-    // (ทำงานเมื่อUnlocked และไม่ใช่ Basic)
     return {
       border:
         "border-stone-800 hover:border-amber-500/50 hover:shadow-2xl hover:-translate-y-2 cursor-pointer",
@@ -61,7 +58,6 @@ const ModeCard = ({ title, level, description, isLocked, helpText, type }) => {
       bgGradient: "from-amber-500/10 to-transparent",
       button:
         "bg-gradient-to-r from-amber-600 to-amber-500 text-stone-950 shadow-lg shadow-amber-900/20 group-hover:scale-[1.02]",
-      // สีสำหรับ Popup Help
       helpIcon: "text-amber-400",
       helpTitle: "text-amber-400",
       helpBg: "bg-amber-900/20 border-amber-500/20",
@@ -70,40 +66,46 @@ const ModeCard = ({ title, level, description, isLocked, helpText, type }) => {
 
   const theme = getTheme();
 
+  // ฟังก์ชันสำหรับเปิด/ปิด Help
+  const toggleHelp = (e) => {
+    e.stopPropagation(); // ป้องกันไม่ให้ Event ทะลุไปกดการ์ด
+    setShowHelp(!showHelp);
+  };
+
   return (
     <div
       className={`group relative w-[380px] h-[400px] bg-stone-900/60 backdrop-blur-md border rounded-[2.5rem] p-8 flex flex-col justify-between overflow-hidden transition-all duration-300 ${theme.border}`}
     >
       {/* --- 1. Background Gradient Effect --- */}
       <div
-        className={`absolute inset-0 bg-gradient-to-br  ${theme.bgGradient} opacity-0  ${!isLocked && "group-hover:opacity-100"} transition-opacity duration-500`}
+        className={`absolute inset-0 bg-gradient-to-br ${theme.bgGradient} opacity-0 ${!isLocked && "group-hover:opacity-100"} transition-opacity duration-500`}
       />
 
-      {/* --- 2. Popup ข้อความแนะนำ --- */}
+      {/* --- 2. Popup ข้อความแนะนำ (Overlay) --- */}
       <div
-        className={`absolute inset-0 bg-stone-950/95 backdrop-blur-md z-30 flex flex-col items-center justify-center p-8 text-center transition-all duration-300 
-        ${showHelp ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+        // ✅ เพิ่ม: คลิกที่พื้นหลัง Popup เพื่อปิด
+        onClick={(e) => {
+          e.stopPropagation();
+          setShowHelp(false);
+        }}
+        className={`absolute inset-0 bg-stone-950/95 backdrop-blur-md z-30 flex flex-col items-center justify-center p-8 text-center transition-all duration-300 cursor-default
+        ${showHelp ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
       >
-        {/* ✅ ใช้ theme.helpBg เพื่อเปลี่ยนสีพื้นหลังไอคอนตามโหมด */}
-        <div
-          className={`
-    relative z-40 
-    /* 🔴 แก้ไขตรงนี้: เปลี่ยนจาก p-2.5 เป็นกำหนดขนาดกว้างยาวเเละจัดกึ่งกลาง */
-    w-12 h-12 flex items-center justify-center rounded-full 
-    border transition-all duration-300 cursor-help
-    ${
-      type === "basic"
-        ? "border-lime-500/30 bg-stone-900/60 text-lime-400 hover:bg-lime-500/20 hover:shadow-[0_0_15px_rgba(132,204,22,0.5)]"
-        : "border-orange-500/30 bg-stone-900/60 text-orange-400 hover:bg-orange-500/20 hover:shadow-[0_0_15px_rgba(249,115,22,0.5)]"
-    }
-  `}
-          onMouseEnter={() => setShowHelp(true)}
-          onMouseLeave={() => setShowHelp(false)}
+        {/* ✅ เพิ่ม: ปุ่มปิด X มุมขวาบน */}
+        <button 
+            className="absolute top-6 right-6 text-stone-500 hover:text-white transition-colors cursor-pointer"
+            onClick={(e) => {
+                e.stopPropagation();
+                setShowHelp(false);
+            }}
         >
-          <HelpCircle size={24} />
+            <X size={24} />
+        </button>
+
+        <div className={`relative z-40 p-4 rounded-full mb-4 border animate-pulse ${theme.helpBg}`}>
+          <HelpCircle size={48} className={`${theme.helpIcon} drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]`} />
         </div>
 
-        {/* ✅ ใช้ theme.helpTitle เพื่อเปลี่ยนสีหัวข้อ */}
         <h3
           className={`${theme.helpTitle} font-bold text-xl mb-4`}
           style={{ fontFamily: "'Itim', cursive" }}
@@ -117,6 +119,9 @@ const ModeCard = ({ title, level, description, isLocked, helpText, type }) => {
         >
           {contentText}
         </p>
+        
+        {/* ข้อความบอกวิธีกดปิด */}
+        <span className="mt-6 text-xs text-stone-600 font-light">(แตะเพื่อปิด)</span>
       </div>
 
       {/* --- 3. เนื้อหาการ์ด --- */}
@@ -124,24 +129,25 @@ const ModeCard = ({ title, level, description, isLocked, helpText, type }) => {
         {/* Header: Icon & Help */}
         <div className="flex justify-between items-start mb-6">
           {/* Main Icon Box */}
-          <div
-            className={`p-4 rounded-2xl border transition-all duration-300 ${theme.iconBox}`}
-          >
+          <div className={`p-4 rounded-2xl border transition-all duration-300 ${theme.iconBox}`}>
             <Keyboard size={32} />
           </div>
 
-          {/* Help Icon */}
+          {/* Help Icon (Trigger Button) */}
           <div
+            // ✅ แก้ไข: ขยายขนาดปุ่มเป็น w-12 h-12 และจัดกึ่งกลาง
             className={`
-    relative z-40 p-2.5 rounded-full border transition-all duration-300 cursor-help
-    ${
-      type === "basic"
-        ? "border-lime-500/30 bg-stone-900/60 text-lime-400 hover:bg-lime-500/20 hover:shadow-[0_0_15px_rgba(132,204,22,0.5)]"
-        : "border-orange-500/30 bg-stone-900/60 text-orange-400 hover:bg-orange-500/20 hover:shadow-[0_0_15px_rgba(249,115,22,0.5)]"
-    }
-  `}
-            onMouseEnter={() => setShowHelp(true)}
-            onMouseLeave={() => setShowHelp(false)}
+              relative z-20 
+              w-12 h-12 flex items-center justify-center rounded-full 
+              border transition-all duration-300 cursor-pointer
+              ${
+                type === "basic"
+                  ? "border-lime-500/30 bg-stone-900/60 text-lime-400 hover:bg-lime-500/20 hover:shadow-[0_0_15px_rgba(132,204,22,0.5)]"
+                  : "border-orange-500/30 bg-stone-900/60 text-orange-400 hover:bg-orange-500/20 hover:shadow-[0_0_15px_rgba(249,115,22,0.5)]"
+              }
+            `}
+            // ✅ แก้ไข: ใช้ onClick แทน onMouseEnter
+            onClick={toggleHelp}
           >
             <HelpCircle size={24} />
           </div>
@@ -155,9 +161,7 @@ const ModeCard = ({ title, level, description, isLocked, helpText, type }) => {
           >
             {title}
           </h2>
-          <span
-            className={`text-xs font-bold tracking-widest uppercase ${theme.textSub}`}
-          >
+          <span className={`text-xs font-bold tracking-widest uppercase ${theme.textSub}`}>
             {level}
           </span>
         </div>
@@ -171,9 +175,7 @@ const ModeCard = ({ title, level, description, isLocked, helpText, type }) => {
 
         {/* --- 4. Footer Button --- */}
         <div className="mt-auto pt-4">
-          <div
-            className={`w-full py-4 px-6 rounded-2xl flex items-center justify-between font-bold transition-all duration-300 ${theme.button}`}
-          >
+          <div className={`w-full py-4 px-6 rounded-2xl flex items-center justify-between font-bold transition-all duration-300 ${theme.button}`}>
             {isLocked ? (
               <div className="flex items-center justify-center w-full">
                 <Lock size={20} className="mr-2" /> <span>ยังไม่ปลดล็อค</span>
