@@ -9,14 +9,10 @@ const AdminPage = () => {
   const navigate = useNavigate();
 
   // --- Helper: ฟังก์ชันแปลง Progress Object เป็นข้อความสวยๆ ---
-  // --- Helper: ฟังก์ชันแปลง Progress Object เป็นข้อความสวยๆ ---
   const formatProgress = (progress) => {
     if (!progress) return <span className="text-gray-600">- No Data -</span>;
 
-    // Helper ย่อยสำหรับดึงเลเวล (Level ปัจจุบัน = ด่านที่ผ่าน + 1)
     const getLvl = (key) => (progress[key]?.highestPassedLevel || 0) + 1;
-
-    // Helper ย่อยสำหรับดึงจำนวนที่ผ่าน (Passed Count)
     const getPassed = (key) => progress[key]?.highestPassedLevel || 0;
 
     return (
@@ -26,50 +22,29 @@ const AdminPage = () => {
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-lime-500"></span>
             <span className="text-lime-400 font-bold w-16">Basic TH:</span>
-            <span className="text-white font-mono">
-              Lv.{getLvl("basic_TH")}
-            </span>
-            {/* ✅ เรียกใช้ getPassed ตรงนี้ */}
-            <span className="text-gray-500 text-[10px]">
-              (Pass: {getPassed("basic_TH")})
-            </span>
+            <span className="text-white font-mono">Lv.{getLvl("basic_TH")}</span>
+            <span className="text-gray-500 text-[10px]">(Pass: {getPassed("basic_TH")})</span>
           </div>
-
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-lime-500 opacity-50"></span>
             <span className="text-lime-400/70 font-bold w-16">Basic EN:</span>
-            <span className="text-white/70 font-mono">
-              Lv.{getLvl("basic_EN")}
-            </span>
-            {/* ✅ เรียกใช้ getPassed ตรงนี้ */}
-            <span className="text-gray-500 text-[10px]">
-              (Pass: {getPassed("basic_EN")})
-            </span>
+            <span className="text-white/70 font-mono">Lv.{getLvl("basic_EN")}</span>
+            <span className="text-gray-500 text-[10px]">(Pass: {getPassed("basic_EN")})</span>
           </div>
         </div>
-
         {/* Pro Mode (TH/EN) */}
         <div className="flex flex-col gap-1 mt-1 border-t border-gray-700 pt-1">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-amber-500"></span>
             <span className="text-amber-400 font-bold w-16">Pro TH:</span>
             <span className="text-white font-mono">Lv.{getLvl("pro_TH")}</span>
-            {/* ✅ เรียกใช้ getPassed ตรงนี้ */}
-            <span className="text-gray-500 text-[10px]">
-              (Pass: {getPassed("pro_TH")})
-            </span>
+            <span className="text-gray-500 text-[10px]">(Pass: {getPassed("pro_TH")})</span>
           </div>
-
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-amber-500 opacity-50"></span>
             <span className="text-amber-400/70 font-bold w-16">Pro EN:</span>
-            <span className="text-white/70 font-mono">
-              Lv.{getLvl("pro_EN")}
-            </span>
-            {/* ✅ เรียกใช้ getPassed ตรงนี้ */}
-            <span className="text-gray-500 text-[10px]">
-              (Pass: {getPassed("pro_EN")})
-            </span>
+            <span className="text-white/70 font-mono">Lv.{getLvl("pro_EN")}</span>
+            <span className="text-gray-500 text-[10px]">(Pass: {getPassed("pro_EN")})</span>
           </div>
         </div>
       </div>
@@ -88,7 +63,6 @@ const AdminPage = () => {
 
   useEffect(() => {
     const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-
     if (!currentUser || currentUser.role !== "admin") {
       alert("คุณไม่มีสิทธิ์เข้าถึงหน้านี้!");
       navigate("/");
@@ -160,8 +134,8 @@ const AdminPage = () => {
               <thead className="bg-[#252525] text-gray-400 uppercase text-xs">
                 <tr>
                   <th className="px-6 py-4">Username</th>
+                  <th className="px-6 py-4">Full Name</th>
                   <th className="px-6 py-4">Role</th>
-                  {/* ✅ เพิ่มหัวตาราง Progress */}
                   <th className="px-6 py-4">Game Progress</th>
                   <th className="px-6 py-4">Password (DB)</th>
                   <th className="px-6 py-4 text-center">Actions</th>
@@ -169,36 +143,40 @@ const AdminPage = () => {
               </thead>
               <tbody className="divide-y divide-gray-800">
                 {users.map((user) => (
-                  <tr
-                    key={user._id}
-                    className="hover:bg-[#202020] transition-colors"
-                  >
+                  <tr key={user._id} className="hover:bg-[#202020] transition-colors">
+                    
+                    {/* ✅ คอลัมน์ 1: Username */}
                     <td className="px-6 py-4 font-medium text-lg text-white">
                       {user.username}
                     </td>
+
+                    {/* ✅ คอลัมน์ 2: Full Name (เพิ่มใหม่) */}
+                    <td className="px-6 py-4 text-gray-300">
+                      {user.firstName ? `${user.firstName} ${user.lastName}` : "-"}
+                    </td>
+
+                    {/* ✅ คอลัมน์ 3: Role */}
                     <td className="px-6 py-4">
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-bold ${
-                          user.role === "admin"
-                            ? "bg-purple-900/50 text-purple-200 border border-purple-700"
-                            : "bg-gray-800 text-gray-300 border border-gray-700"
-                        }`}
-                      >
+                      <span className={`px-2 py-1 rounded text-xs font-bold ${
+                        user.role === "admin"
+                          ? "bg-purple-900/50 text-purple-200 border border-purple-700"
+                          : "bg-gray-800 text-gray-300 border border-gray-700"
+                      }`}>
                         {user.role}
                       </span>
                     </td>
 
-                    {/* ✅ ส่วนแสดงผล Progress */}
+                    {/* ✅ คอลัมน์ 4: Progress */}
                     <td className="px-6 py-4">
                       {formatProgress(user.progress)}
                     </td>
 
-                    <td
-                      className="px-6 py-4 text-gray-600 font-mono text-xs truncate max-w-[100px]"
-                      title={user.password}
-                    >
+                    {/* ✅ คอลัมน์ 5: Password */}
+                    <td className="px-6 py-4 text-gray-600 font-mono text-xs truncate max-w-[100px]" title={user.password}>
                       {user.password}
                     </td>
+
+                    {/* ✅ คอลัมน์ 6: Actions */}
                     <td className="px-6 py-4 flex justify-center gap-3">
                       <button
                         onClick={() => handleEditPassword(user._id)}

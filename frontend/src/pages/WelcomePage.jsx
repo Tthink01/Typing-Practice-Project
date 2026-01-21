@@ -5,7 +5,6 @@ import { Keyboard, ArrowRight } from "lucide-react";
 const CHAR_SET =
   "กขฃคฅฆงจฉชซฌญฎฏฐฑฒณดตถทธนบปผฝพฟภมยรลวศษสหฬอฮabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
 
-// ย้ายฟังก์ชันสุ่มตำแหน่งออกมาข้างนอก เพื่อให้เรียกใช้ได้ทุกที่
 const getRandomPos = () => ({
   top: Math.floor(Math.random() * 80) + 10 + "%",
   left: Math.floor(Math.random() * 90) + 5 + "%",
@@ -13,7 +12,6 @@ const getRandomPos = () => ({
 
 // 1. ตัวอักษรลอยไปมา (FloatingChar)
 const FloatingChar = ({ className }) => {
-  // ✅ แก้ไข: สุ่มค่าตั้งแต่ประกาศตัวแปรเลย (ไม่ต้องรอ useEffect)
   const [char, setChar] = useState(
     () => CHAR_SET[Math.floor(Math.random() * CHAR_SET.length)]
   );
@@ -24,20 +22,18 @@ const FloatingChar = ({ className }) => {
   const timeoutRef = useRef(null);
 
   useEffect(() => {
-    // ใน useEffect เหลือแค่ "จังหวะการเล่น" (Loop) เท่านั้น ไม่มีการ Set ค่าเริ่มต้นแล้ว
     const runCycle = () => {
       setIsVisible(true);
       const stayDuration = 8000 + Math.random() * 7000;
 
       timeoutRef.current = setTimeout(() => {
-        setIsVisible(false); // สั่งซ่อน
+        setIsVisible(false);
 
-        // รอให้จางหายไปก่อน (3วิ) ค่อยสุ่มค่าใหม่สำหรับรอบหน้า
         timeoutRef.current = setTimeout(() => {
           setChar(CHAR_SET[Math.floor(Math.random() * CHAR_SET.length)]);
           setPosition(getRandomPos());
           setOpacity(0.05 + Math.random() * 0.15);
-          runCycle(); // วนลูป
+          runCycle();
         }, 3000);
       }, stayDuration);
     };
@@ -63,26 +59,36 @@ const FloatingChar = ({ className }) => {
   );
 };
 
-// 2. ชื่อหัวข้อ (FloatingTitle)
+// 2. ชื่อหัวข้อ (FloatingTitle) - Updated
 const FloatingTitle = () => {
   const text = "E & T Touch Typing";
   const words = text.split(" ");
+
   return (
-    <h1 className="text-4xl sm:text-5xl md:text-7xl font-mali font-bold mb-2 -mt-6 flex flex-nowrap justify-center gap-x-3 md:gap-x-6 leading-normal select-none whitespace-nowrap">
+    <h1
+      className="text-5xl sm:text-7xl md:text-8xl mb-2 -mt-6 flex flex-nowrap justify-center gap-x-3 md:gap-x-6 leading-normal select-none whitespace-nowrap"
+      style={{ fontFamily: "'Mali', cursive", fontWeight: 600 }}
+    >
       {words.map((word, wIndex) => (
         <div key={wIndex} className="flex">
           {word.split("").map((char, cIndex) => {
-            const delay = (wIndex * 3 + cIndex) * 0.25;
+            // Logic การคำนวณ Delay ใหม่
+            const calculateDelay = (wIndex * 3 + cIndex) * 0.25;
+            const finalDelay = calculateDelay - 20;
+
             return (
               <span
                 key={cIndex}
-                className="inline-block pb-4"
+                className="inline-block pb-4 px-1"
                 style={{
-                  animation: `float-letter 5s cubic-bezier(0.4, 0, 0.2, 1) infinite`,
-                  animationDelay: `${delay}s`,
+                  animation: `float-letter 7s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite`,
+                  animationDelay: `${finalDelay}s`,
                 }}
               >
-                <span className="text-shine-effect filter drop-shadow-[0_0_15px_rgba(234,179,8,0.6)]">
+                <span
+                  className="text-shine-effect filter drop-shadow-[0_0_15px_rgba(234,179,8,0.6)]"
+                  style={{ WebkitTextStroke: "1px #FCD34D" }}
+                >
                   {char}
                 </span>
               </span>

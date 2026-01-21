@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, RefreshCw, Globe } from "lucide-react";
+import PageTransition from "../components/Shared/PageTransition"; // นำเข้า
 
 // Components
 import Navbar from "../components/Navbar";
@@ -141,10 +142,38 @@ const SandboxPage = () => {
                 if (avg > slow.time) slow = { char, time: avg };
             });
 
+            // 🔥 เราต้องแปลง Object เป็น Array เพื่อส่งไปให้ Popup วนลูปแสดงผล
+            // สร้างฟังก์ชันย่อย หรือ เขียนสดตรงนี้ก็ได้เพื่อให้ได้ List รายการ
+            const processStatsArray = () => {
+                const times = keyTimes.current;
+                const processed = Object.entries(times).map(([char, timeArr]) => {
+                   const avgTime = timeArr.reduce((a, b) => a + b, 0) / timeArr.length;
+                   return { char, time: Math.round(avgTime) };
+                });
+
+                // เรียงจากน้อยไปมาก (เร็วสุด)
+                processed.sort((a, b) => a.time - b.time);
+                
+                const fastArr = processed.slice(0, 3).map(k => ({...k, percent: 100})); // ปรับ percent ตามต้องการ
+                
+                // เรียงจากมากไปน้อย (ช้าสุด)
+                const slowArr = [...processed].sort((a, b) => b.time - a.time).slice(0, 3).map(k => ({...k, percent: 100}));
+
+                return { fastArr, slowArr };
+            };
+            
+            const { fastArr, slowArr } = processStatsArray();
+
             setFinalStats({
                 wpm,
                 accuracy,
                 wrongKeys: Array.from(wrongKeysRef.current),
+                
+                // ✅✅✅ เพิ่ม 2 บรรทัดนี้ครับ (สำคัญมาก!) ✅✅✅
+                fastestKeys: fastArr, 
+                slowestKeys: slowArr,
+                
+                // อันเดิม (ที่เป็นตัวเดียว) เก็บไว้ก็ได้ครับ แต่ Popup ตัวใหม่ใช้แบบ Array ด้านบน
                 fastestKey: fast.char !== '-' ? `${fast.char} (${Math.round(fast.time)}ms)` : '-',
                 slowestKey: slow.char !== '-' ? `${slow.char} (${Math.round(slow.time)}ms)` : '-'
             });
@@ -158,17 +187,13 @@ const SandboxPage = () => {
   }, [isGameActive, showSummary, userInput, targetText, addFloater]);
 
   return (
+    
     <div className="w-full min-h-screen bg-stone-950 text-orange-50 font-sans flex flex-col relative overflow-hidden pt-20">
       {/* Background Effects */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
         <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-orange-600/10 rounded-full blur-[120px]"></div>
       </div>
 
-      
-      
-      {/* ✅ จุดที่แก้ไข: เพิ่ม mt-8 (ดันลงมา) และ z-20 (ให้อยู่เหนือ layer อื่น)
-         เปลี่ยนจาก pt-4 เป็น pt-8 หรือ mt-8 เพื่อหนี Navbar 
-      */}
       <div className="max-w-4xl mx-auto w-full h-full flex flex-col mt-8 relative z-20 px-4 flex-grow">
         
         {/* Header Control */}
@@ -300,14 +325,22 @@ const SandboxPage = () => {
         />
       ))}
 
+      {/* ✅✅✅ แก้ไขส่วน Popup ตรงนี้ครับ ✅✅✅ */}
       {showSummary && (
         <SummaryPopup 
-          stats={finalStats} 
+          stats={finalStats}
+          isWin={true} 
+          onRetry={() => startNewGame(lang)} 
+          onHome={() => navigate("/")} 
           onNext={() => startNewGame(lang)} 
+          currentCount={0}
+          
+          isSandbox={true} // 👈 เพิ่มบรรทัดนี้ครับ
         />
       )}
 
     </div>
+    
   );
 };
 
