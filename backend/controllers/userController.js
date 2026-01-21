@@ -197,6 +197,46 @@ const forceUnlockLevel = async (req, res) => {
   }
 };
 
+// --- เพิ่ม: ดึง Progress ของ User (สำหรับ Navbar/Certificate) ---
+const getUserProgress = async (req, res) => {
+  const { username } = req.params;
+
+  try {
+    // 1. ค้นหา User
+    const user = await UserModel.findOne({ username: username });
+
+    if (!user) {
+      return res.status(404).json({ status: "Error", message: "User not found" });
+    }
+
+    // 2. แปลงข้อมูลจาก Database ให้เป็น Array เพื่อให้ Frontend นับจำนวนได้ง่ายๆ
+    // DB เก็บแบบ: { basic_TH: { highestPassedLevel: 5 } }
+    // เราจะแปลงเป็น: ["basic_TH_1", "basic_TH_2", ..., "basic_TH_5"]
+    const completedLevels = [];
+
+    if (user.progress) {
+      // วนลูปทุกโหมด (basic_TH, basic_EN, pro_TH, etc.)
+      Object.entries(user.progress).forEach(([key, value]) => {
+        const count = value.highestPassedLevel || 0;
+        for (let i = 1; i <= count; i++) {
+          completedLevels.push(`${key}-${i}`);
+        }
+      });
+    }
+
+    // 3. ส่งกลับไป
+    res.json({
+      status: "Success",
+      username: user.username,
+      completedLevels: completedLevels, // ส่ง Array นี้ไปให้ Navbar.length
+    });
+
+  } catch (err) {
+    console.error("Get Progress Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
 module.exports = {
   getAllUsers,
   deleteUser,
@@ -207,4 +247,5 @@ module.exports = {
   getUserById,
   resetProgress,
   forceUnlockLevel,
+  getUserProgress
 };

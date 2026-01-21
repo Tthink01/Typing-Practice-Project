@@ -9,7 +9,7 @@ import {
   Keyboard,
 } from "lucide-react";
 
-import axios from "axios"; // ✅ ต้องมี axios
+import axios from "axios";
 import { EXERCISES_DATA } from "../data/exercises";
 
 const ActiveDot = () => (
@@ -20,7 +20,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // --- Auth Logic (ย้ายขึ้นมาเพื่อให้ useEffect เรียกใช้ user ได้) ---
+  // --- Auth Logic ---
   const [user, setUser] = useState(() => {
     const storedUser = localStorage.getItem("currentUser");
     return storedUser ? JSON.parse(storedUser) : null;
@@ -71,10 +71,19 @@ const Navbar = () => {
 
   useEffect(() => {
     const checkProgressFromDB = async () => {
-      // 1. นับจำนวนด่านทั้งหมด (Client Side Calculation)
+      // 1. นับจำนวนด่านทั้งหมด
       let totalLevels = 0;
-      if (EXERCISES_DATA["normal"]?.["TH"]) totalLevels += EXERCISES_DATA["normal"]["TH"].length;
-      if (EXERCISES_DATA["normal"]?.["EN"]) totalLevels += EXERCISES_DATA["normal"]["EN"].length;
+
+      console.log("📦 EXERCISES_DATA:", EXERCISES_DATA);
+
+      if (EXERCISES_DATA["basic"]?.["TH"]) totalLevels += EXERCISES_DATA["basic"]["TH"].length;
+      if (EXERCISES_DATA["basic"]?.["EN"]) totalLevels += EXERCISES_DATA["basic"]["EN"].length;
+
+      // ✅ แก้จุดที่ 2: เพิ่มการนับโหมด "pro" ด้วย (ถ้าต้องการให้นับรวม)
+      if (EXERCISES_DATA["pro"]?.["TH"]) totalLevels += EXERCISES_DATA["pro"]["TH"].length;
+      if (EXERCISES_DATA["pro"]?.["EN"]) totalLevels += EXERCISES_DATA["pro"]["EN"].length;
+      
+      console.log("Calculated Total Levels:", totalLevels);
 
       // ถ้ายังไม่ Login ไม่ต้องเช็ค -> ปิดปุ่ม
       if (!user) {
@@ -83,28 +92,40 @@ const Navbar = () => {
       }
 
       try {
-        // ✅ 2. ยิง API ไปถาม Database แทนการอ่าน LocalStorage
-        // เปลี่ยน URL 'http://localhost:5000' ให้ตรงกับ Server ของคุณ
-        const response = await axios.get(`http://localhost:5000/api/users/${user.username}/progress`);
+        // ✅ แก้ไข: เปลี่ยนเป็น Port 3001 และลบ /api ออก (เพื่อให้ตรงกับ AdminTools)
+        const response = await axios.get(`http://localhost:3001/users/${user.username}/progress`);
         
-        // สมมติว่า Backend ส่งกลับมาเป็น: { completedLevels: ["th-1", "th-2", ...], ... }
         const completedLevels = response.data.completedLevels || [];
         const completedCount = completedLevels.length;
 
+        console.log(`📊 Progress Debug:
+          - User: ${user.username}
+          - Completed Count (DB): ${completedCount}
+          - Total Levels (Calculated): ${totalLevels}
+          - Unlocked?: ${completedCount >= totalLevels}
+          - List Completed:`, completedLevels
+        );
+
         // 3. เปรียบเทียบ
-        // ถ้าเล่นครบทุกด่าน (และมีด่านให้เล่น) -> ปลดล็อค
         const isUnlocked = completedCount >= totalLevels && totalLevels > 0;
         setIsCertificateUnlocked(isUnlocked);
         
-        
       } catch (error) {
         console.error("❌ Error fetching progress:", error);
-        // กรณี Error (ต่อ DB ไม่ติด) ให้ปิดปุ่มไว้ก่อน หรือจะ Fallback ไป LocalStorage ก็ได้
         setIsCertificateUnlocked(false);
       }
     };
 
+    // เรียกใช้ครั้งแรก
     checkProgressFromDB();
+
+    // ✅ เพิ่ม Listener รอรับสัญญาณจาก AdminTools (หรือที่อื่นๆ)
+    window.addEventListener("progress-change", checkProgressFromDB);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener("progress-change", checkProgressFromDB);
+    };
   }, [location, user]); // เช็คใหม่เมื่อเปลี่ยนหน้า หรือ user เปลี่ยน
 
   // Class Helper
@@ -165,7 +186,7 @@ const Navbar = () => {
             {isSandbox && <ActiveDot />}
           </Link>
 
-          {/* ✅ ปุ่ม Certificate (โชว์เมื่อ Database บอกว่าครบ) */}
+          {/* ✅ ปุ่ม Certificate */}
           {isCertificateUnlocked && (
             <Link
               to="/certificate"
