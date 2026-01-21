@@ -123,27 +123,32 @@ const useGameFlow = () => {
   };
 
   // ✅ (Optional) ถ้าอยากให้คนไม่ล็อกอิน "กดเลือกโหมดไม่ได้เลย" ให้แก้ตรงนี้
-  const handleCardClick = (mode) => {
-    if (mode.id === "basic" || mode.id === "pro") {
-      setActiveModal(mode.id);
-    }
+const handleCardClick = (mode) => {
+    // ตรวจสอบว่าเป็นโหมด Basic หรือ Pro หรือไม่
+    const isGameMode = mode.id === "basic" || mode.id === "pro";
 
-    // เช็คก่อนว่าล็อกอินไหม?
-    const storedUser = localStorage.getItem("currentUser");
-    if (!storedUser && (mode.id === "basic" || mode.id === "pro")) {
-      if (
-        window.confirm(
-          "กรุณาเข้าสู่ระบบก่อนเริ่มเล่นเกม\nต้องการไปหน้าเข้าสู่ระบบหรือไม่?"
-        )
-      ) {
-        navigate("/login");
+    if (isGameMode) {
+      // 1. เช็คก่อนว่าล็อกอินไหม?
+      const storedUser = localStorage.getItem("currentUser");
+
+      if (!storedUser) {
+        // กรณี: ยังไม่ล็อกอิน
+        if (
+          window.confirm(
+            "กรุณาเข้าสู่ระบบก่อนเริ่มเล่นเกม\nต้องการไปหน้าเข้าสู่ระบบหรือไม่?"
+          )
+        ) {
+          navigate("/login"); // ถ้ากด OK -> ไป Login
+        }
+        // ถ้ากด Cancel -> ก็จะจบฟังก์ชันตรงนี้เลย (return) ไม่ทำบรรทัดล่างต่อ
+        return; 
       }
-      return;
-    }
 
-    if (mode.id === "basic" || mode.id === "pro") {
+      // 2. ถ้าล็อกอินแล้ว ถึงจะให้เปิด Modal
       setActiveModal(mode.id);
+      
     } else {
+      // กรณีโหมดอื่นๆ (เช่น Sandbox)
       navigate(mode.path);
     }
   };
