@@ -7,6 +7,9 @@ const UserSchema = new mongoose.Schema({
   password: { type: String, required: true },
   role: { type: String, default: "user" },
 
+  firstName: { type: String, default: "" },
+  lastName: { type: String, default: "" },
+
   progress: {
     type: Object,
     default: {
@@ -19,6 +22,17 @@ const UserSchema = new mongoose.Schema({
       pro_EN: { highestPassedLevel: 0, scores: {} },
     },
   },
+
+  history: [
+    {
+      mode: { type: String, required: true }, // basic หรือ pro
+      level: { type: Number, required: true },
+      wpm: { type: Number, required: true },
+      accuracy: { type: Number, required: true },
+      timeUsed: { type: Number, default: 0 }, // เวลาที่ใช้ (วินาที)
+      timestamp: { type: Date, default: Date.now } // 🕒 วันที่เล่น (สำคัญมาก)
+    }
+  ],
 });
 
 // ปกติใช้ "users" (ชื่อ collection) หรือ "User" (ชื่อ Model)

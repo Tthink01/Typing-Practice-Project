@@ -1,11 +1,25 @@
 // server/controllers/userController.js
 const UserModel = require("../models/User");
 
-// --- สมัครสมาชิก ---
+// --- สมัครสมาชิก (แก้ไข) ---
 const registerUser = (req, res) => {
-  UserModel.create(req.body)
-    .then((users) => res.json(users))
-    .catch((err) => res.json(err));
+  // ✅ รับค่า firstName, lastName เพิ่มเข้ามาจาก req.body
+  const { username, password, firstName, lastName } = req.body;
+
+  UserModel.create({ 
+      username, 
+      password, 
+      firstName,  // ✅ บันทึกชื่อจริงลงฐานข้อมูล
+      lastName    // ✅ บันทึกนามสกุลลงฐานข้อมูล
+    })
+    .then((user) => {
+        // ส่งกลับเป็นรูปแบบมาตรฐาน { status: "Success", user: ... }
+        res.json({ status: "Success", message: "สมัครสมาชิกสำเร็จ", user: user });
+    })
+    .catch((err) => {
+        // กรณีชื่อซ้ำหรือ error อื่นๆ
+        res.json({ status: "Error", message: err.message });
+    });
 };
 
 // --- เข้าสู่ระบบ ---
@@ -67,7 +81,6 @@ const getUserById = (req, res) => {
 };
 
 // --- Game: อัปเดตความคืบหน้า (Save Progress) ---
-// --- Game: อัปเดตความคืบหน้า (Save Progress) ---
 const updateProgress = async (req, res) => {
   const { userId, mode, level, score, wpm, accuracy, language } = req.body;
 
@@ -97,8 +110,6 @@ const updateProgress = async (req, res) => {
     console.log(`[API] Updating ${progressKey} | Current: ${currentHighest} -> New: ${newLevel}`);
 
     // ✅ แก้ไข 2: Logic การบันทึก
-    // ถ้าเล่นด่านที่สูงกว่า หรือ เท่ากับด่านปัจจุบัน (กรณีเล่นซ้ำให้ผ่าน) ก็ให้บันทึกได้
-    // แต่ปกติเราจะอัปเดตเมื่อ newLevel > currentHighest เพื่อปลดล็อคด่านถัดไป
     if (newLevel > currentHighest) {
       user.progress[progressKey].highestPassedLevel = newLevel;
 
@@ -129,6 +140,7 @@ const updateProgress = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 // --- Reset Progress (อัปเดตให้รองรับแยกภาษา) ---
 const resetProgress = async (req, res) => {
   const { userId } = req.body;
@@ -210,12 +222,9 @@ const getUserProgress = async (req, res) => {
     }
 
     // 2. แปลงข้อมูลจาก Database ให้เป็น Array เพื่อให้ Frontend นับจำนวนได้ง่ายๆ
-    // DB เก็บแบบ: { basic_TH: { highestPassedLevel: 5 } }
-    // เราจะแปลงเป็น: ["basic_TH_1", "basic_TH_2", ..., "basic_TH_5"]
     const completedLevels = [];
 
     if (user.progress) {
-      // วนลูปทุกโหมด (basic_TH, basic_EN, pro_TH, etc.)
       Object.entries(user.progress).forEach(([key, value]) => {
         const count = value.highestPassedLevel || 0;
         for (let i = 1; i <= count; i++) {
@@ -228,7 +237,7 @@ const getUserProgress = async (req, res) => {
     res.json({
       status: "Success",
       username: user.username,
-      completedLevels: completedLevels, // ส่ง Array นี้ไปให้ Navbar.length
+      completedLevels: completedLevels, 
     });
 
   } catch (err) {
