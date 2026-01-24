@@ -2,13 +2,14 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 
+// Component ย่อยสำหรับ Input
 const InputField = ({ label, name, type = "text", placeholder, onChange, value }) => (
   <div className="mb-3">
     <label className="text-xs text-gray-400 mb-1 block">{label}</label>
     <input
       type={type}
       name={name}
-      value={value} // ✅ เพิ่ม value เพื่อให้เคลียร์ค่าได้
+      value={value} // ✅ รับค่า value เพื่อให้ควบคุมการล้างข้อมูลได้
       placeholder={placeholder}
       onChange={onChange}
       className="w-full bg-[#0f0f0f] border border-gray-700 rounded-lg p-3 text-white focus:border-orange-500 outline-none transition-colors placeholder-gray-600"
@@ -21,11 +22,10 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   
-  // ✅ เพิ่ม state สำหรับชื่อ-นามสกุล และยืนยันรหัสผ่าน
   const [formData, setFormData] = useState({ 
     username: "", 
     password: "", 
-    confirmPassword: "", // สำหรับเช็คหน้าบ้าน
+    confirmPassword: "", 
     firstName: "", 
     lastName: "" 
   });
@@ -36,7 +36,7 @@ const LoginPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // ✅ เพิ่ม Logic ตรวจสอบรหัสผ่านซ้ำ (เฉพาะตอนสมัครสมาชิก)
+    // ✅ ตรวจสอบรหัสผ่านซ้ำ (เฉพาะตอนสมัครสมาชิก)
     if (!isLogin) {
       if (formData.password !== formData.confirmPassword) {
         alert("รหัสผ่านไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง");
@@ -50,13 +50,14 @@ const LoginPage = () => {
     try {
       const { data } = await axios.post(apiUrl, formData);
 
-      if (data.status === "Success" || (!isLogin && data)) {
+      // เช็ค status == Success ให้ชัดเจน
+      if (data.status === "Success") {
         if (isLogin) {
           // --- Login Success ---
           localStorage.setItem("currentUser", JSON.stringify(data.user));
           window.dispatchEvent(new Event("auth-change"));
 
-          // ✅ ดึงชื่อจริงมาแสดงตอนทักทาย (ถ้ามี)
+          // แสดงชื่อจริงตอนทักทาย
           const displayName = data.user.firstName ? `${data.user.firstName} ${data.user.lastName}` : data.user.username;
           alert(`ยินดีต้อนรับ! ${displayName}`);
 
@@ -67,10 +68,10 @@ const LoginPage = () => {
           }
         } else {
           // --- Register Success ---
-          alert("สมัครสมาชิกสำเร็จ! กรุณาเข้าสู่ระบบ");
-          setIsLogin(true);
-          // เคลียร์ค่า form
-          setFormData({ username: "", password: "", confirmPassword: "", firstName: "", lastName: "" });
+          alert("สมัครสมาชิกสำเร็จ!");
+          
+          // ✨✨✨ สั่งรีเฟรชหน้าจอตามที่ต้องการ ✨✨✨
+          window.location.reload(); 
         }
       } else {
         alert(data.message || "เกิดข้อผิดพลาด");
@@ -85,7 +86,7 @@ const LoginPage = () => {
     <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center relative overflow-hidden font-sans">
       <div className="absolute top-[-20%] right-[-10%] w-[500px] h-[500px] bg-orange-900/20 rounded-full blur-[100px]" />
 
-      <div className="bg-[#1a1a1a] p-8 rounded-2xl border border-gray-800 w-full max-w-md shadow-2xl z-10 my-10"> {/* my-10 เผื่อจอเล็ก */}
+      <div className="bg-[#1a1a1a] p-8 rounded-2xl border border-gray-800 w-full max-w-md shadow-2xl z-10 my-10">
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-200">
             {isLogin ? "ยินดีต้อนรับกลับ" : "สร้างบัญชีใหม่"}
@@ -103,13 +104,15 @@ const LoginPage = () => {
               <InputField
                 label="FirstName"
                 name="firstName"
-                placeholder=""
+                value={formData.firstName} // ✅ ใส่ value
+                placeholder="ชื่อจริง"
                 onChange={handleChange}
               />
               <InputField
                 label="LastName"
                 name="lastName"
-                placeholder=""
+                value={formData.lastName} // ✅ ใส่ value
+                placeholder="นามสกุล"
                 onChange={handleChange}
               />
             </div>
@@ -118,6 +121,7 @@ const LoginPage = () => {
           <InputField
             label="Username"
             name="username"
+            value={formData.username} // ✅ ใส่ value
             placeholder={isLogin ? "ใส่ชื่อผู้ใช้" : "ตั้งชื่อผู้ใช้"}
             onChange={handleChange}
           />
@@ -125,6 +129,7 @@ const LoginPage = () => {
           <InputField
             label="Password"
             name="password"
+            value={formData.password} // ✅ ใส่ value
             type="password"
             placeholder="••••••••"
             onChange={handleChange}
@@ -135,6 +140,7 @@ const LoginPage = () => {
             <InputField
               label="Confirm Password"
               name="confirmPassword"
+              value={formData.confirmPassword} // ✅ ใส่ value
               type="password"
               placeholder="••••••••"
               onChange={handleChange}
@@ -149,7 +155,11 @@ const LoginPage = () => {
         <div className="mt-6 text-center text-sm text-gray-400">
           {isLogin ? "ยังไม่มีบัญชี? " : "มีบัญชีอยู่แล้ว? "}
           <button
-            onClick={() => setIsLogin(!isLogin)}
+            onClick={() => {
+                setIsLogin(!isLogin);
+                // เคลียร์ค่าเมื่อกดสลับโหมด
+                setFormData({ username: "", password: "", confirmPassword: "", firstName: "", lastName: "" });
+            }}
             className="text-orange-400 hover:text-orange-300 underline font-medium"
           >
             {isLogin ? "สมัครสมาชิกเลย" : "เข้าสู่ระบบ"}
