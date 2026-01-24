@@ -1,56 +1,72 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const path = require("path"); // 1. ✅ เพิ่ม import path
 const userRoutes = require("./routes/userRoutes");
-require("dotenv").config(); // โหลด .env แบบปกติ (ถ้าไม่มีไฟล์ก็ไม่ Error)
+require("dotenv").config();
 
 const app = express();
 app.use(express.json());
 
-// --- 1. แก้ CORS (อนุญาตให้ Frontend เข้าถึงได้) ---
-// ใส่ URL ของ Frontend ที่คุณ Deploy เสร็จแล้วลงไปใน array นี้
+// --- 1. CORS ---
 const allowedOrigins = [
-  "http://localhost:5173", // สำหรับรันในเครื่อง
-  "https://typing-practice-ogdr.onrender.com" // ⚠️ อย่าลืมแก้ตรงนี้เป็น Link Frontend จริง
+  "http://localhost:5173",
+  "https://typing-practice-ogdr.onrender.com"
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
-    // อนุญาตถ้าไม่มี origin (เช่น Postman) หรือถ้า origin อยู่ใน allowedOrigins
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
       console.log("CORS Blocked:", origin);
-      callback(null, true); // หรือ callback(new Error('Not allowed by CORS')) ถ้าอยากเข้มงวด
+      callback(null, true);
     }
   },
   credentials: true
 }));
 
-// --- 2. ดึงค่า MONGO_URI ---
+// --- 2. MongoDB ---
 const mongoURI = process.env.MONGO_URI;
-
-// --- 3. เพิ่ม Route หน้าแรก (แก้ปัญหา Cannot GET /) ---
-app.get("/", (req, res) => {
-  res.send("✅ API is running! (Typing Game Backend)");
-});
-
-// --- ตรวจสอบก่อนเชื่อมต่อ ---
 if (!mongoURI) {
   console.error("❌ ERROR: ไม่พบ MONGO_URI");
-  console.error("👉 บน Render: ไปที่ Dashboard > Environment > Add MONGO_URI");
 } else {
-    // --- เชื่อมต่อ MongoDB ---
-    mongoose
-      .connect(mongoURI)
-      .then(() => console.log("✅ เชื่อมต่อ MongoDB สำเร็จ!"))
-      .catch((err) => console.error("❌ DB Error:", err));
+  mongoose
+    .connect(mongoURI)
+    .then(() => console.log("✅ เชื่อมต่อ MongoDB สำเร็จ!"))
+    .catch((err) => console.error("❌ DB Error:", err));
 }
 
+// --- 3. Routes API ---
+// (ควรวาง API ไว้ก่อนส่วน Static Files)
 app.use(userRoutes);
 
-// --- 4. แก้ Port (ต้องใช้ process.env.PORT) ---
-const PORT = process.env.PORT || 3001; // ถ้า Render ส่ง Port มาให้ใช้ Port นั้น ถ้าไม่มีใช้ 3001
+
+// =========================================================
+// 4. ✅ ส่วนที่เพิ่ม: ตั้งค่าให้ Server เสิร์ฟหน้าเว็บ React
+// =========================================================
+
+// 4.1 บอกตำแหน่งโฟลเดอร์ที่ Build มา (dist)
+// หมายเหตุ: เช็คให้ดีว่าโฟลเดอร์ client ของคุณชื่อ 'client' ใช่ไหม
+const clientBuildPath = path.join(__dirname, "../client/dist"); 
+
+// สั่งให้ Express ใช้ไฟล์ในโฟลเดอร์นั้นได้
+app.use(express.static(clientBuildPath));
+
+// 4.2 ❌ ลบ Route "/" อันเดิมออก (หรือคอมเมนต์ทิ้ง)
+// app.get("/", (req, res) => {
+//   res.send("✅ API is running! (Typing Game Backend)");
+// });
+
+// 4.3 ✨ CATCH-ALL ROUTE (พระเอกที่จะแก้ปัญหา Not Found) ✨
+// ถ้า User เข้ามาด้วย URL อะไรก็ตามที่ Server ไม่รู้จัก ให้ส่ง index.html กลับไป
+app.get("*", (req, res) => {
+  res.sendFile(path.join(clientBuildPath, "index.html"));
+});
+
+// =========================================================
+
+const PORT = process.env.PORT || 3001;
 
 app.listen(PORT, () => {
   console.log(`🚀 Server is running on port ${PORT}`);
