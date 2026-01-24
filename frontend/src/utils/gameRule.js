@@ -10,7 +10,7 @@ export const GAME_CONFIG = {
   },
   PRO: {
     MIN_ACCURACY: 90, 
-    MIN_WPM: 10       
+    MIN_WPM: 30       
   }
 };
 

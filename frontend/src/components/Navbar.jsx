@@ -43,9 +43,6 @@ const Navbar = () => {
     }
   };
 
-  // ==========================================
-  // 🔥 Logic เช็ค Active Menu
-  // ==========================================
   const isWelcomeActive = () => {
     if (location.pathname !== "/") return false;
     if (location.state?.forceShowWelcome) return true;
@@ -63,51 +60,31 @@ const Navbar = () => {
 
   const isSandbox = location.pathname.toLowerCase() === "/sandbox";
   const isCertificate = location.pathname.toLowerCase() === "/certificate";
-
-  // ==========================================
-  // 🏆 Logic เช็ค Certificate จาก "ฐานข้อมูล (Database)"
-  // ==========================================
   const [isCertificateUnlocked, setIsCertificateUnlocked] = useState(false);
 
   useEffect(() => {
     const checkProgressFromDB = async () => {
-      // 1. นับจำนวนด่านทั้งหมด
-      let totalLevels = 0;
+      let totalBasic = 0;
+      if (EXERCISES_DATA["basic"]?.["TH"]) totalBasic += EXERCISES_DATA["basic"]["TH"].length;
+      if (EXERCISES_DATA["basic"]?.["EN"]) totalBasic += EXERCISES_DATA["basic"]["EN"].length;
 
-      console.log("📦 EXERCISES_DATA:", EXERCISES_DATA);
-
-      if (EXERCISES_DATA["basic"]?.["TH"]) totalLevels += EXERCISES_DATA["basic"]["TH"].length;
-      if (EXERCISES_DATA["basic"]?.["EN"]) totalLevels += EXERCISES_DATA["basic"]["EN"].length;
-
-      // ✅ แก้จุดที่ 2: เพิ่มการนับโหมด "pro" ด้วย (ถ้าต้องการให้นับรวม)
-      if (EXERCISES_DATA["pro"]?.["TH"]) totalLevels += EXERCISES_DATA["pro"]["TH"].length;
-      if (EXERCISES_DATA["pro"]?.["EN"]) totalLevels += EXERCISES_DATA["pro"]["EN"].length;
-      
-      console.log("Calculated Total Levels:", totalLevels);
-
-      // ถ้ายังไม่ Login ไม่ต้องเช็ค -> ปิดปุ่ม
       if (!user) {
         setIsCertificateUnlocked(false);
         return;
       }
 
       try {
-        // ✅ แก้ไข: เปลี่ยนเป็น Port 3001 และลบ /api ออก (เพื่อให้ตรงกับ AdminTools)
         const response = await axios.get(`http://localhost:3001/users/${user.username}/progress`);
-        
         const completedLevels = response.data.completedLevels || [];
-        const completedCount = completedLevels.length;
-
-        console.log(`📊 Progress Debug:
-          - User: ${user.username}
-          - Completed Count (DB): ${completedCount}
-          - Total Levels (Calculated): ${totalLevels}
-          - Unlocked?: ${completedCount >= totalLevels}
-          - List Completed:`, completedLevels
+        const passedBasicCount = completedLevels.filter(lvl => lvl.startsWith("basic")).length;
+        const isUnlocked = passedBasicCount >= totalBasic && totalBasic > 0;
+        
+        console.log(`🏆 Certificate Unlock Check:
+          - Total Basic: ${totalBasic}
+          - Passed Basic: ${passedBasicCount}
+          - Unlocked: ${isUnlocked}`
         );
 
-        // 3. เปรียบเทียบ
-        const isUnlocked = completedCount >= totalLevels && totalLevels > 0;
         setIsCertificateUnlocked(isUnlocked);
         
       } catch (error) {
@@ -116,17 +93,13 @@ const Navbar = () => {
       }
     };
 
-    // เรียกใช้ครั้งแรก
     checkProgressFromDB();
 
-    // ✅ เพิ่ม Listener รอรับสัญญาณจาก AdminTools (หรือที่อื่นๆ)
     window.addEventListener("progress-change", checkProgressFromDB);
-
-    // Cleanup
     return () => {
       window.removeEventListener("progress-change", checkProgressFromDB);
     };
-  }, [location, user]); // เช็คใหม่เมื่อเปลี่ยนหน้า หรือ user เปลี่ยน
+  }, [location, user]);
 
   // Class Helper
   const getMenuIconClass = (active) =>
@@ -186,7 +159,6 @@ const Navbar = () => {
             {isSandbox && <ActiveDot />}
           </Link>
 
-          {/* ✅ ปุ่ม Certificate */}
           {isCertificateUnlocked && (
             <Link
               to="/certificate"

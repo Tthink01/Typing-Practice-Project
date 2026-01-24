@@ -9,7 +9,7 @@ const InputField = ({ label, name, type = "text", placeholder, onChange, value }
     <input
       type={type}
       name={name}
-      value={value} // ✅ รับค่า value เพื่อให้ควบคุมการล้างข้อมูลได้
+      value={value}
       placeholder={placeholder}
       onChange={onChange}
       className="w-full bg-[#0f0f0f] border border-gray-700 rounded-lg p-3 text-white focus:border-orange-500 outline-none transition-colors placeholder-gray-600"
@@ -36,7 +36,6 @@ const LoginPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // ✅ ตรวจสอบรหัสผ่านซ้ำ (เฉพาะตอนสมัครสมาชิก)
     if (!isLogin) {
       if (formData.password !== formData.confirmPassword) {
         alert("รหัสผ่านไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง");
@@ -50,14 +49,11 @@ const LoginPage = () => {
     try {
       const { data } = await axios.post(apiUrl, formData);
 
-      // เช็ค status == Success ให้ชัดเจน
       if (data.status === "Success") {
         if (isLogin) {
-          // --- Login Success ---
           localStorage.setItem("currentUser", JSON.stringify(data.user));
           window.dispatchEvent(new Event("auth-change"));
 
-          // แสดงชื่อจริงตอนทักทาย
           const displayName = data.user.firstName ? `${data.user.firstName} ${data.user.lastName}` : data.user.username;
           alert(`ยินดีต้อนรับ! ${displayName}`);
 
@@ -67,10 +63,7 @@ const LoginPage = () => {
             navigate("/");
           }
         } else {
-          // --- Register Success ---
-          alert("สมัครสมาชิกสำเร็จ!");
-          
-          // ✨✨✨ สั่งรีเฟรชหน้าจอตามที่ต้องการ ✨✨✨
+          alert("สมัครสมาชิกสำเร็จ! ระบบจะรีเฟรชหน้าจอเพื่อเข้าสู่ระบบ");
           window.location.reload(); 
         }
       } else {
@@ -98,30 +91,36 @@ const LoginPage = () => {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-2">
           
-          {/* ✅ ส่วนที่เพิ่ม: ชื่อ-นามสกุล (แสดงเฉพาะตอนสมัคร) */}
+          {/* ✅ ส่วนที่แก้ไข: เพิ่มหมายเหตุใต้ชื่อ-นามสกุล */}
           {!isLogin && (
-            <div className="grid grid-cols-2 gap-3">
-              <InputField
-                label="FirstName"
-                name="firstName"
-                value={formData.firstName} // ✅ ใส่ value
-                placeholder="ชื่อจริง"
-                onChange={handleChange}
-              />
-              <InputField
-                label="LastName"
-                name="lastName"
-                value={formData.lastName} // ✅ ใส่ value
-                placeholder="นามสกุล"
-                onChange={handleChange}
-              />
-            </div>
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                <InputField
+                  label="ชื่อจริง (First Name)"
+                  name="firstName"
+                  value={formData.firstName}
+                  placeholder="เช่น สมชาย"
+                  onChange={handleChange}
+                />
+                <InputField
+                  label="นามสกุล (Last Name)"
+                  name="lastName"
+                  value={formData.lastName}
+                  placeholder="เช่น ใจดี"
+                  onChange={handleChange}
+                />
+              </div>
+              {/* ข้อความหมายเหตุ */}
+              <p className="text-[10px] text-orange-400/90 -mt-1 mb-3 leading-tight">
+                * หมายเหตุ: ให้ใส่ชื่อและนามสกุลจริง เพราะชื่อดังกล่าวจะใช้ในการออกใบเกียรติบัตรหลังจากฝึกฝนแบบฝึกหัดเสร็จเรียบร้อย
+              </p>
+            </>
           )}
 
           <InputField
             label="Username"
             name="username"
-            value={formData.username} // ✅ ใส่ value
+            value={formData.username}
             placeholder={isLogin ? "ใส่ชื่อผู้ใช้" : "ตั้งชื่อผู้ใช้"}
             onChange={handleChange}
           />
@@ -129,18 +128,17 @@ const LoginPage = () => {
           <InputField
             label="Password"
             name="password"
-            value={formData.password} // ✅ ใส่ value
+            value={formData.password}
             type="password"
             placeholder="••••••••"
             onChange={handleChange}
           />
 
-          {/* ✅ ส่วนที่เพิ่ม: ยืนยันรหัสผ่าน (แสดงเฉพาะตอนสมัคร) */}
           {!isLogin && (
             <InputField
               label="Confirm Password"
               name="confirmPassword"
-              value={formData.confirmPassword} // ✅ ใส่ value
+              value={formData.confirmPassword}
               type="password"
               placeholder="••••••••"
               onChange={handleChange}
@@ -157,7 +155,6 @@ const LoginPage = () => {
           <button
             onClick={() => {
                 setIsLogin(!isLogin);
-                // เคลียร์ค่าเมื่อกดสลับโหมด
                 setFormData({ username: "", password: "", confirmPassword: "", firstName: "", lastName: "" });
             }}
             className="text-orange-400 hover:text-orange-300 underline font-medium"
