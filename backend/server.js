@@ -35,6 +35,11 @@ app.get("/", (req, res) => {
   res.send("✅ API is running! (Typing Game Backend)");
 });
 
+// Route สำหรับ Health Check (เอาไว้เช็คว่า Server ตื่นหรือยัง)
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'Online' });
+});
+
 // --- ตรวจสอบก่อนเชื่อมต่อ ---
 if (!mongoURI) {
   console.error("❌ ERROR: ไม่พบ MONGO_URI");
