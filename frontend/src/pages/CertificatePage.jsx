@@ -159,6 +159,12 @@ const CertificatePage = () => {
                         alt="Certificate Background" 
                         className="w-full h-full object-cover"
                     />
+{/* 
+                    <img 
+                        src={selectedType === "basic" ? certificateBasicBg : certificateProBg} 
+                        alt="Certificate Background" 
+                        className="w-full h-full object-cover"
+                    /> */}
                     
                     {/* ชื่อผู้เล่น */}
                     <div className="absolute top-[35%] left-0 w-full text-center z-10 px-10">
