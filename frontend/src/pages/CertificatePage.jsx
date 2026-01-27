@@ -1,19 +1,21 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import html2canvas from "html2canvas";
-import { Download, Lock, Home, CheckCircle } from "lucide-react"; 
+import { Download, Lock, Home, CheckCircle, Loader2 } from "lucide-react"; // ✅ เพิ่ม Loader2
 import axios from "axios";
 import { EXERCISES_DATA } from "../data/exercises";
 
-// ✅ 1. Import รูปภาพแยก 2 ใบ (ตรวจสอบชื่อไฟล์ให้ตรงกับในโฟลเดอร์ assets ของคุณ)
 import certificateBasicBg from "../assets/certificate_basic.png"; 
-import certificateProBg from "../assets/certificate_pro.png";     
+import certificateProBg from "../assets/certificate_pro.png"; 
 
 const CertificatePage = () => {
   const navigate = useNavigate();
   const certificateRef = useRef(null);
   const [userName, setUserName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  
+  // ✅ 1. เพิ่ม State สำหรับสถานะกำลังดาวน์โหลด
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const [selectedType, setSelectedType] = useState("basic");
 
@@ -28,6 +30,7 @@ const CertificatePage = () => {
   });
 
   useEffect(() => {
+    // ... (ส่วน fetchProgress เหมือนเดิม ไม่ต้องแก้) ...
     const fetchProgress = async () => {
       try {
         const basicTotal = (EXERCISES_DATA["basic"]?.["TH"]?.length || 0) + (EXERCISES_DATA["basic"]?.["EN"]?.length || 0);
@@ -71,18 +74,38 @@ const CertificatePage = () => {
     fetchProgress();
   }, []);
 
+  // ✅ 2. แก้ไขฟังก์ชัน handleDownload ให้สมบูรณ์
   const handleDownload = async () => {
-    if (certificateRef.current) {
+    if (!certificateRef.current) return;
+
+    try {
+      setIsDownloading(true); // เริ่มหมุน
+
+      // รอ 100ms เพื่อให้แน่ใจว่า Browser พร้อม (ช่วยเรื่องฟอนต์ไม่โหลด)
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       const canvas = await html2canvas(certificateRef.current, {
-        scale: 2,
-        backgroundColor: null,
-        useCORS: true,
+        scale: 2, // เพิ่มความชัด
+        backgroundColor: "#ffffff",
+        useCORS: true, // สำคัญมากสำหรับการโหลดรูป
+        logging: true, // ช่วยดู error ใน console F12
       });
+
       const image = canvas.toDataURL("image/png");
       const link = document.createElement("a");
       link.href = image;
       link.download = `Certificate-${selectedType.toUpperCase()}-${userName}.png`;
+      
+      // เทคนิคสำหรับบาง Browser ที่กดไม่ติด
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
+
+    } catch (error) {
+      console.error("Download Failed:", error);
+      alert("ดาวน์โหลดไม่สำเร็จ: " + error.message);
+    } finally {
+      setIsDownloading(false); // หยุดหมุน
     }
   };
 
@@ -104,7 +127,6 @@ const CertificatePage = () => {
          เลือกใบประกาศนียบัตร
       </h2>
 
-      {/* ปุ่มเลือก Tab */}
       <div className="flex gap-4 mb-8 bg-stone-900 p-2 rounded-full border border-stone-800">
         <button
           onClick={() => setSelectedType("basic")}
@@ -154,14 +176,12 @@ const CertificatePage = () => {
                     ref={certificateRef}
                     className="relative w-[800px] h-[600px] shadow-2xl flex-shrink-0 bg-white"
                 >
-                    {/* ✅ 2. เปลี่ยนรูปภาพตาม selectedType */}
                     <img 
                         src={selectedType === "basic" ? certificateBasicBg : certificateProBg} 
                         alt="Certificate Background" 
                         className="w-full h-full object-cover"
                     />
                     
-                    {/* ชื่อผู้เล่น */}
                     <div className="absolute top-[39%] left-0 w-full text-center z-10 px-10">
                         <h1 
                         className="text-[#1a1a1a]"
@@ -175,25 +195,37 @@ const CertificatePage = () => {
                         </h1>
                     </div>
 
-                    {/* วันที่ */}
                     <div className="absolute bottom-[8.5%] right-[5%] text-center z-10">
-                        <p className="text-stone-600 font-itim text-m">
+                        <p className="text-[#57534e] font-itim text-m">
                             {new Date().toLocaleDateString('en-GB')}
                         </p>
                     </div>
                 </div>
             </div>
 
+            {/* ✅ 3. ปรับปรุงปุ่ม Download ให้มีสถานะ Loading */}
             <button
                 onClick={handleDownload}
+                disabled={isDownloading}
                 className={`flex items-center gap-2 px-8 py-4 font-bold text-lg rounded-full shadow-lg transition-transform hover:scale-105 ${
+                    isDownloading ? "opacity-70 cursor-wait" : ""
+                } ${
                     selectedType === "basic" 
                     ? "bg-orange-500 hover:bg-orange-600 text-white" 
                     : "bg-amber-500 hover:bg-amber-600 text-black"
                 }`}
             >
-                <Download size={24} /> 
-                ดาวน์โหลดใบประกาศ ({selectedType === "basic" ? "พื้นฐาน" : "ระดับใช้ได้"})
+                {isDownloading ? (
+                    <>
+                        <Loader2 size={24} className="animate-spin" />
+                        กำลังประมวลผล...
+                    </>
+                ) : (
+                    <>
+                        <Download size={24} /> 
+                        ดาวน์โหลดใบประกาศ ({selectedType === "basic" ? "พื้นฐาน" : "ระดับใช้ได้"})
+                    </>
+                )}
             </button>
         </>
       )}
