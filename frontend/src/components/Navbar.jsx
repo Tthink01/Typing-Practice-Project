@@ -7,6 +7,7 @@ import {
   User,
   LogOut,
   Keyboard,
+  History,
 } from "lucide-react";
 
 import axios from "axios";
@@ -65,8 +66,10 @@ const Navbar = () => {
   useEffect(() => {
     const checkProgressFromDB = async () => {
       let totalBasic = 0;
-      if (EXERCISES_DATA["basic"]?.["TH"]) totalBasic += EXERCISES_DATA["basic"]["TH"].length;
-      if (EXERCISES_DATA["basic"]?.["EN"]) totalBasic += EXERCISES_DATA["basic"]["EN"].length;
+      if (EXERCISES_DATA["basic"]?.["TH"])
+        totalBasic += EXERCISES_DATA["basic"]["TH"].length;
+      if (EXERCISES_DATA["basic"]?.["EN"])
+        totalBasic += EXERCISES_DATA["basic"]["EN"].length;
 
       if (!user) {
         setIsCertificateUnlocked(false);
@@ -74,19 +77,21 @@ const Navbar = () => {
       }
 
       try {
-        const response = await axios.get(`http://localhost:3001/users/${user.username}/progress`);
+        const response = await axios.get(
+          `http://localhost:3001/users/${user.username}/progress`,
+        );
         const completedLevels = response.data.completedLevels || [];
-        const passedBasicCount = completedLevels.filter(lvl => lvl.startsWith("basic")).length;
+        const passedBasicCount = completedLevels.filter((lvl) =>
+          lvl.startsWith("basic"),
+        ).length;
         const isUnlocked = passedBasicCount >= totalBasic && totalBasic > 0;
-        
+
         console.log(`🏆 Certificate Unlock Check:
           - Total Basic: ${totalBasic}
           - Passed Basic: ${passedBasicCount}
-          - Unlocked: ${isUnlocked}`
-        );
+          - Unlocked: ${isUnlocked}`);
 
         setIsCertificateUnlocked(isUnlocked);
-        
       } catch (error) {
         console.error("❌ Error fetching progress:", error);
         setIsCertificateUnlocked(false);
@@ -111,7 +116,6 @@ const Navbar = () => {
 
   return (
     <nav className="fixed top-0 left-0 w-full flex justify-between items-center px-6 py-4 z-50 bg-[#1c1917]/95 backdrop-blur-md border-b border-[#f97316]/20 shadow-lg">
-      
       {/* 1. Logo */}
       <Link
         to="/"
@@ -129,7 +133,6 @@ const Navbar = () => {
       {/* 2. เมนูตรงกลาง */}
       <div className="absolute left-1/2 transform -translate-x-1/2">
         <div className="bg-[#27272a] border border-[#3f3f46] rounded-full px-8 md:px-12 py-3 md:py-4 flex items-center gap-8 md:gap-10 shadow-inner">
-          
           <Link
             to="/"
             state={{ forceShowWelcome: true }}
@@ -155,7 +158,10 @@ const Navbar = () => {
             title="โหมดพิมพ์อิสระ"
             className="relative flex flex-col items-center justify-center group"
           >
-            <Type size={22} className={`${getMenuIconClass(isSandbox)} ${isSandbox ? "stroke-[2.5px]" : ""}`} />
+            <Type
+              size={22}
+              className={`${getMenuIconClass(isSandbox)} ${isSandbox ? "stroke-[2.5px]" : ""}`}
+            />
             {isSandbox && <ActiveDot />}
           </Link>
 
@@ -171,11 +177,21 @@ const Navbar = () => {
               />
               {isCertificate && <ActiveDot />}
               {!isCertificate && (
-                 <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
               )}
             </Link>
           )}
-
+          <Link
+            to="/history"
+            title="ประวัติการพิมพ์"
+            className="relative flex flex-col items-center justify-center group"
+          >
+            <History
+              size={22}
+              className={getMenuIconClass(location.pathname === "/history")}
+            />
+            {location.pathname === "/history" && <ActiveDot />}
+          </Link>
         </div>
       </div>
 

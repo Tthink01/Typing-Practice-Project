@@ -12,6 +12,7 @@ const registerUser = (req, res) => {
       firstName,  // ✅ บันทึกชื่อจริงลงฐานข้อมูล
       lastName    // ✅ บันทึกนามสกุลลงฐานข้อมูล
     })
+    
     .then((user) => {
         // ส่งกลับเป็นรูปแบบมาตรฐาน { status: "Success", user: ... }
         res.json({ status: "Success", message: "สมัครสมาชิกสำเร็จ", user: user });
@@ -246,6 +247,55 @@ const getUserProgress = async (req, res) => {
   }
 };
 
+//  ดึงประวัติทั้งหมด (สำหรับหน้า HistoryPage) ---
+const getUserHistory = async (req, res) => {
+  try {
+    const user = await UserModel.findOne({ username: req.params.username });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // 1. คำนวณด่านที่ผ่าน (Logic เดียวกับ getUserProgress)
+    const completedLevels = [];
+    if (user.progress) {
+      Object.entries(user.progress).forEach(([key, value]) => {
+        const count = value.highestPassedLevel || 0;
+        for (let i = 1; i <= count; i++) {
+          completedLevels.push(`${key}-${i}`);
+        }
+      });
+    }
+
+    // 2. ส่งกลับไปพร้อม Sandbox History (เรียงใหม่ -> เก่า, เอาแค่ 5 อัน)
+    res.json({
+      completedLevels: completedLevels,
+      sandboxHistory: user.sandboxHistory 
+        ? user.sandboxHistory.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5) 
+        : []
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+//  บันทึกผล Sandbox ---
+const saveSandboxResult = async (req, res) => {
+  const { wpm, accuracy, language } = req.body;
+  try {
+    const user = await UserModel.findOne({ username: req.params.username });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // สร้าง array ถ้ายังไม่มี
+    if (!user.sandboxHistory) user.sandboxHistory = [];
+
+    // เพิ่มข้อมูลใหม่
+    user.sandboxHistory.push({ wpm, accuracy, language });
+    
+    await user.save();
+    res.json({ status: "Success", message: "Saved sandbox result" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 module.exports = {
   getAllUsers,
   deleteUser,
@@ -256,5 +306,7 @@ module.exports = {
   getUserById,
   resetProgress,
   forceUnlockLevel,
-  getUserProgress
+  getUserProgress,
+  getUserHistory,
+  saveSandboxResult
 };

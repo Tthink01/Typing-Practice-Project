@@ -1,7 +1,7 @@
 // server/routes/userRoutes.js
 const express = require('express');
 const router = express.Router();
-const userController = require('../controllers/userController.js'); // เรียกใช้ Controller ที่ทำตะกี้
+const userController = require('../controllers/userController.js'); 
 
 // กำหนดเส้นทาง
 router.get('/users', userController.getAllUsers);
@@ -14,4 +14,6 @@ router.get('/users/:username/progress', userController.getUserProgress);
 router.get('/users/:id', userController.getUserById);
 router.post('/users/reset-progress', userController.resetProgress);
 router.post('/users/force-unlock', userController.forceUnlockLevel); 
+router.get('/users/:username/history', userController.getUserHistory);
+router.post('/users/:username/sandbox', userController.saveSandboxResult);
 module.exports = router;

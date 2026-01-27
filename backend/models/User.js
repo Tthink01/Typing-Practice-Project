@@ -33,6 +33,15 @@ const UserSchema = new mongoose.Schema({
       timestamp: { type: Date, default: Date.now } // 🕒 วันที่เล่น (สำคัญมาก)
     }
   ],
+
+  sandboxHistory: [
+    {
+      wpm: Number,
+      accuracy: Number,
+      language: String,
+      date: { type: Date, default: Date.now }
+    }
+  ]
 });
 
 // ปกติใช้ "users" (ชื่อ collection) หรือ "User" (ชื่อ Model)

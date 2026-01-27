@@ -13,7 +13,8 @@ import Navbar from "./components/Navbar";
 import AdminTools from './components/Admin/AdminTools';
 import PageTransition from "./components/Shared/PageTransition";
 import CertificatePage from "./pages/CertificatePage";
-import ServerWakingUp from './components/ServerWakingUp'; // ✅ Component แจ้งเตือน
+import ServerWakingUp from './components/ServerWakingUp'; 
+import HistoryPage from "./pages/HistoryPage";
 
 const PAGE_DEPTHS = {
   "/": 0,
@@ -72,6 +73,7 @@ const AnimatedRoutes = () => {
           <Route path="/admin" element={<PageTransition direction={navState.direction}><AdminPage /></PageTransition>} />
           <Route path="/game/:mode/:levelId" element={<PageTransition direction={navState.direction}><PracticePage /></PageTransition>} />
           <Route path="/certificate" element={<CertificatePage />} />
+          <Route path="/history" element={<PageTransition direction={navState.direction}><HistoryPage /></PageTransition>} />
 
         </Routes>
       </AnimatePresence>
