@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
+import { CircleHelp } from "lucide-react";
 
 // --- Components ---
 import ModeCard from "../components/ModeCard";
@@ -8,11 +9,18 @@ import WelcomeScreen from "./WelcomePage";
 import LevelSelectModal from "../components/LevelSelectModal"; // หรือ path ที่คุณเก็บไฟล์ index ของ Shared
 import HeroSection from "../components/Home/HeroSection";
 import PageTransition from "../components/Shared/PageTransition"; // นำเข้า
+import ManualModal from "../components/ManualModal.jsx";
 
 // --- Data ---
 import { GAME_MODES } from "../data/gameMode.js";
 import { EXERCISES_DATA } from "../data/exercises.js";
 import { checkLevelStatus, GAME_CONFIG } from "../utils/gameRule";
+import manual1 from "../assets/manual/1.png";
+import manual2 from "../assets/manual/2.png";
+import manual3 from "../assets/manual/3.png";
+import manual4 from "../assets/manual/4.png";
+import manual5 from "../assets/manual/5.png";
+import manual6 from "../assets/manual/6.png";
 
 // ==========================================
 // 1. Custom Hook: จัดการเรื่อง Welcome Screen
@@ -67,7 +75,7 @@ const useGameFlow = () => {
 
           // ยิงไปถาม Server: "เฮ้ย User ID นี้ยังมีตัวตนไหม?"
           const res = await axios.get(
-            `http://localhost:3001/users/${parsedUser._id}`
+            `http://localhost:3001/users/${parsedUser._id}`,
           );
 
           if (res.data.status === "Success") {
@@ -116,14 +124,14 @@ const useGameFlow = () => {
     // 4. ใช้ฟังก์ชันเช็คอันเดิม (Logic การคำนวณถูกต้องแล้ว)
     const status = checkLevelStatus(
       levelId,
-      currentProgress.highestPassedLevel
+      currentProgress.highestPassedLevel,
     );
 
     return status.isUnlocked;
   };
 
   // ✅ (Optional) ถ้าอยากให้คนไม่ล็อกอิน "กดเลือกโหมดไม่ได้เลย" ให้แก้ตรงนี้
-const handleCardClick = (mode) => {
+  const handleCardClick = (mode) => {
     // ตรวจสอบว่าเป็นโหมด Basic หรือ Pro หรือไม่
     const isGameMode = mode.id === "basic" || mode.id === "pro";
 
@@ -135,18 +143,17 @@ const handleCardClick = (mode) => {
         // กรณี: ยังไม่ล็อกอิน
         if (
           window.confirm(
-            "กรุณาเข้าสู่ระบบก่อนเริ่มเล่นเกม\nต้องการไปหน้าเข้าสู่ระบบหรือไม่?"
+            "กรุณาเข้าสู่ระบบก่อนเริ่มเล่นเกม\nต้องการไปหน้าเข้าสู่ระบบหรือไม่?",
           )
         ) {
           navigate("/login"); // ถ้ากด OK -> ไป Login
         }
         // ถ้ากด Cancel -> ก็จะจบฟังก์ชันตรงนี้เลย (return) ไม่ทำบรรทัดล่างต่อ
-        return; 
+        return;
       }
 
       // 2. ถ้าล็อกอินแล้ว ถึงจะให้เปิด Modal
       setActiveModal(mode.id);
-      
     } else {
       // กรณีโหมดอื่นๆ (เช่น Sandbox)
       navigate(mode.path);
@@ -194,6 +201,11 @@ const HomePage = () => {
     userProgress, // รับค่ามา
   } = useGameFlow();
 
+  // State สำหรับเปิด/ปิด Modal
+  const [isManualOpen, setIsManualOpen] = useState(false);
+
+  const manualImages = [manual1, manual2, manual3, manual4, manual5, manual6];
+
   const navigate = useNavigate();
 
   const basicTHLevel = userProgress["basic_TH"]?.highestPassedLevel || 0;
@@ -219,7 +231,6 @@ const HomePage = () => {
   });
 
   return (
-    
     <div className="h-full flex flex-col bg-[#0a0a0a] text-white relative overflow-hidden font-sans">
       {/* --- Layer 1: Welcome Screen --- */}
       {showWelcome && <WelcomeScreen onStart={handleStartGame} />}
@@ -278,6 +289,15 @@ const HomePage = () => {
               </div>
             </div>
           ))}
+
+          <button
+            onClick={() => setIsManualOpen(true)}
+            className="fixed bottom-8 right-8 z-40 p-4 bg-orange-600 hover:bg-orange-500 text-white rounded-full shadow-2xl hover:scale-110 transition-all duration-300 animate-bounce-in border-4 border-[#0a0a0a]"
+            title="คู่มือการใช้งาน"
+            style={{ boxShadow: "0 0 20px rgba(234, 88, 12, 0.6)" }} // เพิ่มแสงเรืองรอง
+          >
+            <CircleHelp size={24} strokeWidth={2.5} />
+          </button>
         </div>
       </main>
 
@@ -291,6 +311,14 @@ const HomePage = () => {
           ❯
         </button>
       </div>
+
+      {isManualOpen && (
+        <ManualModal
+          isOpen={true}
+          onClose={() => setIsManualOpen(false)}
+          images={manualImages}
+        />
+      )}
 
       {/* --- Layer 5: Modals --- */}
       <LevelSelectModal
@@ -316,7 +344,6 @@ const HomePage = () => {
         onSelect={handleLevelStart}
       />
     </div>
-    
   );
 };
 
