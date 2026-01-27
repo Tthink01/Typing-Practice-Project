@@ -4,9 +4,10 @@ import html2canvas from "html2canvas";
 import { Download, Lock, Home, CheckCircle } from "lucide-react"; 
 import axios from "axios";
 import { EXERCISES_DATA } from "../data/exercises";
-import certificateBg from "../assets/certificate_bg.png";
-// import certificateBasicBg from "../assets/certificate_basic.png"; 
-// import certificateProBg from "../assets/certificate_pro.png";     
+
+// ✅ 1. Import รูปภาพแยก 2 ใบ (ตรวจสอบชื่อไฟล์ให้ตรงกับในโฟลเดอร์ assets ของคุณ)
+import certificateBasicBg from "../assets/certificate_basic.png"; 
+import certificateProBg from "../assets/certificate_pro.png";     
 
 const CertificatePage = () => {
   const navigate = useNavigate();
@@ -85,8 +86,6 @@ const CertificatePage = () => {
     }
   };
 
-
-
   if (isLoading) return <div className="text-white text-center mt-20 animate-pulse">Checking records...</div>;
 
   const isCurrentLocked = !unlockStatus[selectedType];
@@ -105,6 +104,7 @@ const CertificatePage = () => {
          เลือกใบประกาศนียบัตร
       </h2>
 
+      {/* ปุ่มเลือก Tab */}
       <div className="flex gap-4 mb-8 bg-stone-900 p-2 rounded-full border border-stone-800">
         <button
           onClick={() => setSelectedType("basic")}
@@ -154,25 +154,20 @@ const CertificatePage = () => {
                     ref={certificateRef}
                     className="relative w-[800px] h-[600px] shadow-2xl flex-shrink-0 bg-white"
                 >
-                    <img 
-                        src={certificateBg} 
-                        alt="Certificate Background" 
-                        className="w-full h-full object-cover"
-                    />
-{/* 
+                    {/* ✅ 2. เปลี่ยนรูปภาพตาม selectedType */}
                     <img 
                         src={selectedType === "basic" ? certificateBasicBg : certificateProBg} 
                         alt="Certificate Background" 
                         className="w-full h-full object-cover"
-                    /> */}
+                    />
                     
                     {/* ชื่อผู้เล่น */}
-                    <div className="absolute top-[35%] left-0 w-full text-center z-10 px-10">
+                    <div className="absolute top-[39%] left-0 w-full text-center z-10 px-10">
                         <h1 
                         className="text-[#1a1a1a]"
                         style={{ 
-                            fontFamily: "'Dancing Script', cursive",
-                            fontSize: "4rem",
+                            fontFamily: "'itim', cursive",
+                            fontSize: "3rem",
                             textShadow: "2px 2px 4px rgba(0,0,0,0.1)"
                         }}
                         >
@@ -180,11 +175,9 @@ const CertificatePage = () => {
                         </h1>
                     </div>
 
-                   
-
-                    {/* วันที่ (Optional) */}
-                    <div className="absolute bottom-[16%] right-[22%] text-center z-10">
-                        <p className="text-stone-600 font-mono text-sm">
+                    {/* วันที่ */}
+                    <div className="absolute bottom-[8.5%] right-[5%] text-center z-10">
+                        <p className="text-stone-600 font-itim text-m">
                             {new Date().toLocaleDateString('en-GB')}
                         </p>
                     </div>
