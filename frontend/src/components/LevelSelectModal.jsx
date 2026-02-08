@@ -95,24 +95,33 @@ const LevelSelectModal = ({
           {exercises && exercises[language] ? (
             exercises[language].map((item) => {
               const unlocked = isLevelUnlocked(item.id);
-
-              // const count = progress[item.id] || 0;
               const highestPassed = progress?.highestPassedLevel || 0;
-              // const count = item.id <= highestPassed ? 3 : 0;
-              // const isAnimating = pendingUnlock && pendingUnlock.type === type && pendingUnlock.id === item.id;
-              const count = item.id <= highestPassed ? 3 : 0;
+
+              let count = 0;
+
+              if (item.id <= highestPassed) {
+                count = 3; 
+              } else {
+                const storageKey = `pass_count_${type}_${item.id}_${language}`;
+                const savedCount = localStorage.getItem(storageKey);
+                
+                if (savedCount) {
+                  count = parseInt(savedCount, 10);
+                }
+              }
+              // -----------------------------------------------------
+
               const isAnimating =
                 pendingUnlock &&
                 pendingUnlock.type === type &&
                 pendingUnlock.id === item.id;
 
-              // ✅ Clean Loop: เลือก Component ที่จะแสดงผล
               if (isAnimating) {
                 return (
                   <AnimatedLevelButton
                     key={item.id}
                     item={item}
-                    count={count}
+                    count={count} // ส่งค่าที่คำนวณใหม่ไป
                     onAnimationComplete={onUnlockAnimationComplete}
                     themeStyles={themeStyles}
                     PASS_TARGET={PASS_TARGET}
@@ -125,7 +134,7 @@ const LevelSelectModal = ({
                   key={item.id}
                   item={item}
                   unlocked={unlocked}
-                  count={count}
+                  count={count} // ส่งค่าที่คำนวณใหม่ไป
                   onSelect={onSelect}
                   themeStyles={themeStyles}
                   PASS_TARGET={PASS_TARGET}

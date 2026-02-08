@@ -115,7 +115,7 @@ const CertificatePage = () => {
   const currentProgress = progressData[selectedType];
 
   return (
-    <div className="min-h-screen bg-stone-950 flex flex-col items-center py-10 px-4 font-sans">
+    <div className="min-h-auto bg-stone-950 flex flex-col items-center py-8 px-4 font-sans">
       
       <div className="w-full max-w-4xl flex justify-between items-center mb-6">
         <button onClick={() => navigate("/")} className="text-stone-400 hover:text-white flex gap-2 items-center transition-colors">

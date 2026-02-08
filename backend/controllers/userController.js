@@ -92,11 +92,11 @@ const updateProgress = async (req, res) => {
       return res.json({ status: "Error", message: "User not found" });
     }
 
-    // ✅ แก้ไข 1: บังคับให้เป็นตัวพิมพ์เล็กเสมอ (basic, pro)
+    // จัดการตัวแปรให้สะอาด
     const cleanMode = mode ? mode.toLowerCase() : "basic";
-    const langSuffix = language || "TH";
+    const langSuffix = language || "TH"; // "TH" หรือ "EN"
     
-    // จะได้ basic_TH หรือ pro_TH ตรงกับ Schema แน่นอน
+    // Key ปัจจุบัน 
     const progressKey = `${cleanMode}_${langSuffix}`; 
 
     // เช็คว่ามี Object นี้ไหม (ถ้าไม่มีสร้างใหม่)
@@ -110,7 +110,7 @@ const updateProgress = async (req, res) => {
 
     console.log(`[API] Updating ${progressKey} | Current: ${currentHighest} -> New: ${newLevel}`);
 
-    // ✅ แก้ไข 2: Logic การบันทึก
+    // --- ส่วนที่ 1: บันทึกความคืบหน้าปกติ ---
     if (newLevel > currentHighest) {
       user.progress[progressKey].highestPassedLevel = newLevel;
 
@@ -118,24 +118,37 @@ const updateProgress = async (req, res) => {
       if (!user.progress[progressKey].scores) user.progress[progressKey].scores = {};
       user.progress[progressKey].scores[newLevel] = { score, wpm, accuracy };
 
-      // 🔥 สำคัญ: แจ้ง Mongoose ว่ามีการแก้ไข Object นี้
+      // แจ้ง Mongoose ว่ามีการแก้ไข Object นี้
       user.markModified("progress");
-
-      await user.save();
-
-      res.json({
-        status: "Success",
-        message: `Level Up to ${newLevel}`,
-        progress: user.progress,
-      });
-    } else {
-      // ถ้าเลเวลไม่เพิ่ม ก็ส่ง success กลับไป (frontend จะได้ไม่ error)
-      res.json({
-        status: "Success",
-        message: "Already passed this level",
-        progress: user.progress,
-      });
     }
+
+    // ---  ส่วนที่ 2: Logic การปลดล็อคข้ามระดับ  ---
+    const MAX_BASIC_LEVEL = 5; 
+    
+    // ถ้าเล่นโหมด Basic และผ่านด่านสุดท้ายแล้ว
+    if (cleanMode === "basic" && newLevel >= MAX_BASIC_LEVEL) {
+        
+        // ให้ปลดล็อค Pro ของ "ภาษานั้นๆ" เท่านั้น (แยก TH/EN)
+        const nextModeKey = `pro_${langSuffix}`; // เช่น pro_TH หรือ pro_EN
+
+        // ถ้ายังไม่มี Key ของ Pro ภาษานั้น ให้สร้างรอไว้
+        if (!user.progress[nextModeKey]) {
+            user.progress[nextModeKey] = { highestPassedLevel: 0, scores: {} };
+            
+            // แจ้ง Mongoose อีกรอบเพื่อความชัวร์
+            user.markModified("progress");
+            console.log(`🔓 Unlocked ${nextModeKey} because ${progressKey} is finished.`);
+        }
+    }
+
+    await user.save();
+
+    res.json({
+      status: "Success",
+      message: `Updated ${progressKey} to Level ${newLevel}`,
+      progress: user.progress,
+    });
+    
   } catch (error) {
     console.error("Update Progress Error:", error);
     res.status(500).json({ error: error.message });

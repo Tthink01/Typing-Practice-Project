@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
+import axios from "axios"; 
 
 // Components
 import Floater from "../components/Shared/Floater";
@@ -37,6 +38,34 @@ const GameContent = () => {
 
   // --- Functions ---
 
+
+  const saveProgress = async () => {
+    try {
+      const storedUser = localStorage.getItem("currentUser");
+      if (storedUser) {
+        const user = JSON.parse(storedUser);
+        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3001";
+
+        // ยิง API ไปบันทึก
+        await axios.post(`${apiUrl}/users/progress`, {
+          userId: user._id, // หรือ user.id แล้วแต่โครงสร้างข้อมูลคุณ
+          mode: mode,
+          level: parseInt(levelId), // แปลงเป็นตัวเลข
+          score: 0, // ถ้ามีคะแนนก็ใส่ไป
+          wpm: finalStats.wpm,
+          accuracy: finalStats.accuracy,
+          language: language // ✅ ส่งภาษาไปด้วย (TH/EN)
+        });
+
+        console.log("✅ Progress Saved:", mode, levelId, language);
+        const storageKey = `pass_count_${mode}_${levelId}_${language}`;
+        localStorage.removeItem(storageKey);
+      }
+    } catch (error) {
+      console.error("❌ Save Progress Error:", error);
+    }
+  };
+
   // ฟังก์ชันรีเซ็ตเกม (ปิด Popup + เริ่มใหม่)
   const handleRestart = () => {
     setShowUpgradePopup(false);
@@ -47,16 +76,20 @@ const GameContent = () => {
   const handleSummaryAction = () => {
     // กรณี 1: ถ้าชนะ -> เปิด Popup เสมอ
     if (isWin) {
-      setShowUpgradePopup(true);
+      const newPassedCount = passedCount + 1;
+      if (newPassedCount >= PASS_TARGET) {
+         // 🎉 ถ้าครบแล้ว ให้บันทึกลง Database
+         saveProgress();
+         setShowUpgradePopup(true);
       return;
+      }
     }
 
     // กรณี 2: ถ้าแพ้
     // เช็คว่าเคยผ่านมาก่อนไหม? (passedCount > 0)
-    if (passedCount > 0 || history.length > 0) { // ✅ เพิ่ม || history.length > 0
+    if (passedCount > 0 || history.length > 0) {
        setShowUpgradePopup(true);
     } else {
-       // ยังไม่เคยผ่านเลยสักครั้ง (และไม่มีประวัติค้าง) -> รีเซ็ตเลย ไม่โชว์ Popup
        handleRestart();
     }
   };

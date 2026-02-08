@@ -108,12 +108,27 @@ const useGameFlow = () => {
   }, []); // ทำงานครั้งเดียวตอนโหลดหน้า
 
   // ... (ฟังก์ชัน isLevelUnlocked และอื่นๆ เหมือนเดิม) ...
-  const isLevelUnlocked = (levelId) => {
+const isLevelUnlocked = (levelId) => {
     // 1. ถ้ายังไม่ได้เลือกโหมด (Modal ปิดอยู่)
     if (!activeModal) return false;
 
-    // ✅ 2. แก้จุดนี้: สร้าง Key ให้ตรงกับที่ Backend บันทึก (Mode + Language)
-    // เช่น: activeModal="basic" + practiceLanguage="TH"  =>  "basic_TH"
+    // ✅✅✅ ส่วนที่เพิ่ม: เช็คเงื่อนไขก่อนเข้าเล่น Pro ✅✅✅
+    if (activeModal === "pro") {
+        // ต้องไปดูความคืบหน้าของ Basic ภาษานั้นๆ ก่อน
+        const basicKey = `basic_${practiceLanguage}`;
+        const basicProgress = userProgress[basicKey]?.highestPassedLevel || 0;
+        
+        // กำหนดจำนวนด่าน Basic ที่ต้องผ่าน (ต้องตรงกับ Backend)
+        const REQUIRED_BASIC_LEVELS = 5; 
+
+        // ถ้า Basic ยังไม่ครบตามกำหนด -> ล็อค Pro ทุกด่านทันที (คืนค่า false)
+        if (basicProgress < REQUIRED_BASIC_LEVELS) {
+            return false; 
+        }
+    }
+    // ✅✅✅ จบส่วนที่เพิ่ม ✅✅✅
+
+    // 2. สร้าง Key ให้ตรงกับที่ Backend บันทึก (Mode + Language)
     const progressKey = `${activeModal}_${practiceLanguage}`;
 
     // 3. ดึงข้อมูลจาก Key ใหม่
@@ -121,7 +136,7 @@ const useGameFlow = () => {
       highestPassedLevel: 0,
     };
 
-    // 4. ใช้ฟังก์ชันเช็คอันเดิม (Logic การคำนวณถูกต้องแล้ว)
+    // 4. ใช้ฟังก์ชันเช็คอันเดิม
     const status = checkLevelStatus(
       levelId,
       currentProgress.highestPassedLevel,
