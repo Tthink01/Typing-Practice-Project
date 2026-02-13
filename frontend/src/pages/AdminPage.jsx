@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import Navbar from "../components/Navbar";
+import Navbar from "../components/Layout/Navbar";
 
 const AdminPage = () => {
   const [users, setUsers] = useState([]);
@@ -130,46 +130,46 @@ const AdminPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white font-sans">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0a0a0a] text-gray-900 dark:text-white font-sans transition-colors duration-300">
       <Navbar />
 
       <div className="container mx-auto px-4 py-24">
-        <h1 className="text-3xl font-bold mb-8 text-orange-500">
+        <h1 className="text-3xl font-bold mb-8 text-orange-600 dark:text-orange-500">
           จัดการผู้ใช้งาน (Admin Panel)
         </h1>
 
         {loading ? (
-          <div className="text-center text-gray-500 animate-pulse">
+          <div className="text-center text-gray-500 dark:text-gray-500 animate-pulse">
             Loading users data...
           </div>
         ) : (
-          <div className="overflow-auto max-h-[70vh] bg-[#1a1a1a] rounded-xl border border-gray-800 shadow-xl relative">
+          <div className="overflow-auto max-h-[70vh] bg-white dark:bg-[#1a1a1a] rounded-xl border border-gray-200 dark:border-gray-800 shadow-xl relative transition-colors duration-300">
             <table className="w-full text-left border-collapse">
-              <thead className="bg-[#252525] text-gray-400 uppercase text-xs sticky top-0 z-10 shadow-md">
+              <thead className="bg-gray-100 dark:bg-[#252525] text-gray-500 dark:text-gray-400 uppercase text-xs sticky top-0 z-10 shadow-md">
                 <tr>
-                  <th className="px-6 py-4 bg-[#252525]">Username</th>
-                  <th className="px-6 py-4 bg-[#252525]">Full Name</th>
-                  <th className="px-6 py-4 bg-[#252525]">Role</th>
-                  <th className="px-6 py-4 bg-[#252525]">Game Progress</th>
-                  <th className="px-6 py-4 bg-[#252525]">Password (DB)</th>
-                  <th className="px-6 py-4 text-center bg-[#252525]">
+                  <th className="px-6 py-4 bg-gray-100 dark:bg-[#252525]">Username</th>
+                  <th className="px-6 py-4 bg-gray-100 dark:bg-[#252525]">Full Name</th>
+                  <th className="px-6 py-4 bg-gray-100 dark:bg-[#252525]">Role</th>
+                  <th className="px-6 py-4 bg-gray-100 dark:bg-[#252525]">Game Progress</th>
+                  <th className="px-6 py-4 bg-gray-100 dark:bg-[#252525]">Password (DB)</th>
+                  <th className="px-6 py-4 text-center bg-gray-100 dark:bg-[#252525]">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800">
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                 {users.map((user) => (
                   <tr
                     key={user._id}
-                    className="hover:bg-[#202020] transition-colors"
+                    className="hover:bg-gray-50 dark:hover:bg-[#202020] transition-colors"
                   >
                     {/* Username */}
-                    <td className="px-6 py-4 font-medium text-lg text-white">
+                    <td className="px-6 py-4 font-medium text-lg text-gray-900 dark:text-white">
                       {user.username}
                     </td>
 
                     {/* Full Name */}
-                    <td className="px-6 py-4 text-gray-300">
+                    <td className="px-6 py-4 text-gray-600 dark:text-gray-300">
                       {user.firstName
                         ? `${user.firstName} ${user.lastName}`
                         : "-"}
@@ -180,8 +180,8 @@ const AdminPage = () => {
                       <span
                         className={`px-2 py-1 rounded text-xs font-bold ${
                           user.role === "admin"
-                            ? "bg-purple-900/50 text-purple-200 border border-purple-700"
-                            : "bg-gray-800 text-gray-300 border border-gray-700"
+                            ? "bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-200 border border-purple-200 dark:border-purple-700"
+                            : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700"
                         }`}
                       >
                         {user.role}
@@ -195,7 +195,7 @@ const AdminPage = () => {
 
                     {/* Password */}
                     <td
-                      className="px-6 py-4 text-gray-600 font-mono text-xs truncate max-w-[100px]"
+                      className="px-6 py-4 text-gray-500 dark:text-gray-600 font-mono text-xs truncate max-w-[100px]"
                       title={user.password}
                     >
                       {user.password}
@@ -205,13 +205,13 @@ const AdminPage = () => {
                     <td className="px-6 py-4 flex justify-center gap-3">
                       <button
                         onClick={() => handleEditPassword(user._id)}
-                        className="px-3 py-1 bg-blue-900/30 text-blue-400 hover:bg-blue-900/50 rounded border border-blue-900 transition-colors text-xs"
+                        className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50 rounded border border-blue-200 dark:border-blue-900 transition-colors text-xs"
                       >
                         เปลี่ยนรหัส
                       </button>
                       <button
                         onClick={() => handleDelete(user._id)}
-                        className="px-3 py-1 bg-red-900/30 text-red-400 hover:bg-red-900/50 rounded border border-red-900 transition-colors text-xs"
+                        className="px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 rounded border border-red-200 dark:border-red-900 transition-colors text-xs"
                       >
                         ลบ
                       </button>

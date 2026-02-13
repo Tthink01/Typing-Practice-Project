@@ -9,11 +9,11 @@ import SandboxPage from "./pages/SandboxPage";
 import LoginPage from "./pages/LoginPage";
 import AdminPage from "./pages/AdminPage";
 import PracticePage from './pages/PracticePage';
-import Navbar from "./components/Navbar";
+import Navbar from "./components/Layout/Navbar";
 import AdminTools from './components/Admin/AdminTools';
 import PageTransition from "./components/Shared/PageTransition";
 import CertificatePage from "./pages/CertificatePage";
-import ServerWakingUp from './components/ServerWakingUp'; 
+import ServerWakingUp from './components/Shared/ServerWakingUp'; 
 import HistoryPage from "./pages/HistoryPage";
 
 const PAGE_DEPTHS = {

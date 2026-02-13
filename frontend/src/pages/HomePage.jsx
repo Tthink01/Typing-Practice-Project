@@ -4,12 +4,12 @@ import axios from "axios";
 import { CircleHelp } from "lucide-react";
 
 // --- Components ---
-import ModeCard from "../components/ModeCard";
+import ModeCard from "../components/Home/ModeCard";
 import WelcomeScreen from "./WelcomePage";
-import LevelSelectModal from "../components/LevelSelectModal"; // หรือ path ที่คุณเก็บไฟล์ index ของ Shared
+import LevelSelectModal from "../components/Home/LevelSelectModal"; // หรือ path ที่คุณเก็บไฟล์ index ของ Shared
 import HeroSection from "../components/Home/HeroSection";
 import PageTransition from "../components/Shared/PageTransition"; // นำเข้า
-import ManualModal from "../components/ManualModal.jsx";
+import ManualModal from "../components/Home/ManualModal.jsx";
 
 // --- Data ---
 import { GAME_MODES } from "../data/gameMode.js";
@@ -246,12 +246,12 @@ const HomePage = () => {
   });
 
   return (
-    <div className="h-full flex flex-col bg-[#0a0a0a] text-white relative overflow-hidden font-sans">
+    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-[#0a0a0a] text-gray-900 dark:text-white relative overflow-hidden font-sans transition-colors duration-300">
       {/* --- Layer 1: Welcome Screen --- */}
       {showWelcome && <WelcomeScreen onStart={handleStartGame} />}
 
       {/* --- Layer 2: Background --- */}
-      <div className="absolute top-[-10%] left-1/2 transform -translate-x-1/2 w-[800px] h-[500px] bg-orange-900/20 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-[-10%] left-1/2 transform -translate-x-1/2 w-[800px] h-[500px] bg-orange-200/50 dark:bg-orange-900/20 rounded-full blur-[120px] pointer-events-none transition-colors duration-300" />
 
       {/* --- Layer 3: Main Content --- */}
       <main className="flex flex-col items-center justify-center relative z-10 p-30">
@@ -307,7 +307,7 @@ const HomePage = () => {
 
           <button
             onClick={() => setIsManualOpen(true)}
-            className="fixed bottom-8 right-8 z-40 p-4 bg-orange-600 hover:bg-orange-500 text-white rounded-full shadow-2xl hover:scale-110 transition-all duration-300 animate-bounce-in border-4 border-[#0a0a0a]"
+            className="fixed bottom-8 right-8 z-40 p-4 bg-orange-600 hover:bg-orange-500 text-white rounded-full shadow-2xl hover:scale-110 transition-all duration-300 animate-bounce-in border-4 border-gray-50 dark:border-[#0a0a0a]"
             title="คู่มือการใช้งาน"
             style={{ boxShadow: "0 0 20px rgba(234, 88, 12, 0.6)" }} // เพิ่มแสงเรืองรอง
           >
@@ -320,7 +320,7 @@ const HomePage = () => {
       <div className="absolute right-4 top-1/2 transform -translate-y-1/2 hidden md:block z-20">
         <button
           onClick={() => navigate("/sandbox")}
-          className="p-3 bg-[#1a1a1a] border border-gray-800 rounded-lg hover:border-orange-500 text-orange-500 transition-colors shadow-lg cursor-pointer"
+          className="p-3 bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-lg hover:border-orange-500 text-orange-500 transition-colors shadow-lg cursor-pointer"
           title="ไปโหมดพิมพ์อิสระ"
         >
           ❯

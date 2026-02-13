@@ -103,24 +103,24 @@ const FloatingTitle = () => {
 // --- Main Component: WelcomeScreen ---
 const WelcomeScreen = ({ onStart }) => {
   return (
-    <div className="fixed inset-0 z-[100] bg-stone-950 flex flex-col items-center justify-center text-center overflow-hidden animate-fade-in font-sans">
+    <div className="fixed inset-0 z-[100] bg-gray-50 dark:bg-stone-950 flex flex-col items-center justify-center text-center overflow-hidden animate-fade-in font-sans transition-colors duration-300">
       {/* Background Decor */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-orange-600/10 rounded-full blur-[120px] animate-pulse pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-yellow-600/10 rounded-full blur-[120px] animate-pulse pointer-events-none" />
 
       {/* Floating Characters Background */}
-      <FloatingChar className="text-stone-600 text-8xl font-black animate-float" />
-      <FloatingChar className="text-stone-500 text-5xl font-bold animate-float-slow" />
-      <FloatingChar className="text-stone-600 text-9xl font-black animate-float-reverse" />
-      <FloatingChar className="text-stone-700 text-4xl font-bold animate-float" />
-      <FloatingChar className="text-stone-600 text-7xl font-black animate-float-slow" />
-      <FloatingChar className="text-stone-500 text-3xl font-bold animate-float-reverse" />
-      <FloatingChar className="text-stone-600 text-6xl font-black animate-float" />
-      <FloatingChar className="text-stone-500 text-5xl font-bold animate-float-slow" />
-      <FloatingChar className="text-stone-600 text-4xl font-black animate-float-reverse" />
-      <FloatingChar className="text-stone-500 text-7xl font-bold animate-float" />
-      <FloatingChar className="text-stone-600 text-3xl font-black animate-float-slow" />
-      <FloatingChar className="text-stone-700 text-5xl font-bold animate-float-reverse" />
+      <FloatingChar className="text-gray-300 dark:text-stone-600 text-8xl font-black animate-float" />
+      <FloatingChar className="text-gray-300 dark:text-stone-500 text-5xl font-bold animate-float-slow" />
+      <FloatingChar className="text-gray-300 dark:text-stone-600 text-9xl font-black animate-float-reverse" />
+      <FloatingChar className="text-gray-300 dark:text-stone-700 text-4xl font-bold animate-float" />
+      <FloatingChar className="text-gray-300 dark:text-stone-600 text-7xl font-black animate-float-slow" />
+      <FloatingChar className="text-gray-300 dark:text-stone-500 text-3xl font-bold animate-float-reverse" />
+      <FloatingChar className="text-gray-300 dark:text-stone-600 text-6xl font-black animate-float" />
+      <FloatingChar className="text-gray-300 dark:text-stone-500 text-5xl font-bold animate-float-slow" />
+      <FloatingChar className="text-gray-300 dark:text-stone-600 text-4xl font-black animate-float-reverse" />
+      <FloatingChar className="text-gray-300 dark:text-stone-500 text-7xl font-bold animate-float" />
+      <FloatingChar className="text-gray-300 dark:text-stone-600 text-3xl font-black animate-float-slow" />
+      <FloatingChar className="text-gray-300 dark:text-stone-700 text-5xl font-bold animate-float-reverse" />
 
       {/* Main Content */}
       <div className="relative z-10 flex flex-col items-center gap-8 max-w-2xl px-6 animate-fade-in-up -translate-y-8">
@@ -132,10 +132,10 @@ const WelcomeScreen = ({ onStart }) => {
         {/* Title & Description */}
         <div>
           <FloatingTitle />
-          <p className="text-stone-400 text-xl md:text-2xl font-itim tracking-wide mt-4">
+          <p className="text-gray-500 dark:text-stone-400 text-xl md:text-2xl font-itim tracking-wide mt-4">
             ฝึกฝนทักษะการพิมพ์สัมผัสของคุณให้{" "}
-            <span className="text-orange-400 font-bold">เร็ว</span> และ{" "}
-            <span className="text-lime-400 font-bold">แม่นยำ</span>
+            <span className="text-orange-500 dark:text-orange-400 font-bold">เร็ว</span> และ{" "}
+            <span className="text-lime-600 dark:text-lime-400 font-bold">แม่นยำ</span>
           </p>
         </div>
 
@@ -163,7 +163,7 @@ const WelcomeScreen = ({ onStart }) => {
           </span>
         </button>
 
-        <p className="text-stone-500 text-lg font-itim mt-8">
+        <p className="text-gray-400 dark:text-stone-500 text-lg font-itim mt-8">
           พัฒนาทักษะการพิมพ์ ไทย & อังกฤษ
         </p>
       </div>

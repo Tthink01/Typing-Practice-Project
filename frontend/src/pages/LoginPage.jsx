@@ -5,14 +5,14 @@ import { useNavigate, Link } from "react-router-dom";
 // Component ย่อยสำหรับ Input
 const InputField = ({ label, name, type = "text", placeholder, onChange, value }) => (
   <div className="mb-3">
-    <label className="text-xs text-gray-400 mb-1 block">{label}</label>
+    <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">{label}</label>
     <input
       type={type}
       name={name}
       value={value}
       placeholder={placeholder}
       onChange={onChange}
-      className="w-full bg-[#0f0f0f] border border-gray-700 rounded-lg p-3 text-white focus:border-orange-500 outline-none transition-colors placeholder-gray-600"
+      className="w-full bg-gray-50 dark:bg-[#0f0f0f] border border-gray-300 dark:border-gray-700 rounded-lg p-3 text-gray-900 dark:text-white focus:border-orange-500 outline-none transition-colors placeholder-gray-400 dark:placeholder-gray-600"
       required
     />
   </div>
@@ -76,10 +76,10 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center relative overflow-hidden font-sans">
-      <div className="absolute top-[-20%] right-[-10%] w-[500px] h-[500px] bg-orange-900/20 rounded-full blur-[100px]" />
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0a0a0a] text-gray-900 dark:text-white flex items-center justify-center relative overflow-hidden font-sans transition-colors duration-300">
+      <div className="absolute top-[-20%] right-[-10%] w-[500px] h-[500px] bg-orange-200/50 dark:bg-orange-900/20 rounded-full blur-[100px]" />
 
-      <div className="bg-[#1a1a1a] p-8 rounded-2xl border border-gray-800 w-full max-w-md shadow-2xl z-10 my-10">
+      <div className="bg-white dark:bg-[#1a1a1a] p-8 rounded-2xl border border-gray-200 dark:border-gray-800 w-full max-w-md shadow-2xl z-10 my-10 transition-colors duration-300">
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-200">
             {isLogin ? "ยินดีต้อนรับกลับ" : "สร้างบัญชีใหม่"}

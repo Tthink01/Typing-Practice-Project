@@ -5,7 +5,7 @@ import axios from "axios";
 import PageTransition from "../components/Shared/PageTransition"; // นำเข้า
 
 // Components
-import Navbar from "../components/Navbar";
+import Navbar from "../components/Layout/Navbar";
 
 // New Components (Shared)
 import Floater from "../components/Shared/Floater";
@@ -231,10 +231,10 @@ const SandboxPage = () => {
   );
 
   return (
-    <div className="w-full min-h-screen bg-stone-950 text-orange-50 font-sans flex flex-col relative overflow-hidden pt-20">
+    <div className="w-full min-h-screen bg-gray-50 dark:bg-stone-950 text-gray-800 dark:text-orange-50 font-sans flex flex-col relative overflow-hidden pt-20 transition-colors duration-300">
       {/* Background Effects */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-orange-600/10 rounded-full blur-[120px]"></div>
+        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-orange-400/20 dark:bg-orange-600/10 rounded-full blur-[120px] transition-colors duration-300"></div>
       </div>
 
       <div className="max-w-4xl mx-auto w-full h-full flex flex-col mt-8 relative z-20 px-4 flex-grow">
@@ -243,17 +243,17 @@ const SandboxPage = () => {
           {/* ปุ่มย้อนกลับ (ซ้าย) */}
           <button
             onClick={() => navigate("/")}
-            className="flex items-center gap-2 cursor-pointer text-orange-500 hover:text-orange-400 transition-colors group z-50"
+            className="flex items-center gap-2 cursor-pointer text-orange-600 dark:text-orange-500 hover:text-orange-500 dark:hover:text-orange-400 transition-colors group z-50"
           >
-            <div className="p-2 rounded-full bg-stone-900 border border-stone-800 group-hover:border-orange-500/50 transition-colors shadow-lg">
+            <div className="p-2 rounded-full bg-white dark:bg-stone-900 border border-gray-200 dark:border-stone-800 group-hover:border-orange-500/50 transition-colors shadow-lg">
               <ChevronLeft size={20} />
             </div>
             <span className="text-sm font-bold">กลับเมนูหลัก</span>
           </button>
 
           {/* ปุ่มเปลี่ยนภาษา (ขวา) */}
-          <div className="flex items-center gap-1 bg-stone-900 rounded-full p-1 border border-stone-800 shadow-xl z-50">
-            <div className="px-3 flex items-center gap-2 text-stone-400">
+          <div className="flex items-center gap-1 bg-white dark:bg-stone-900 rounded-full p-1 border border-gray-200 dark:border-stone-800 shadow-xl z-50 transition-colors">
+            <div className="px-3 flex items-center gap-2 text-gray-500 dark:text-stone-400">
               <Globe size={14} />
               <span className="text-xs font-bold uppercase tracking-wider hidden sm:inline">
                 Lang:
@@ -267,7 +267,7 @@ const SandboxPage = () => {
                 className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all duration-200 ${
                   lang === l
                     ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
-                    : "text-stone-500 hover:bg-stone-800 hover:text-white"
+                    : "text-gray-500 dark:text-stone-500 hover:bg-gray-100 dark:hover:bg-stone-800 hover:text-gray-900 dark:hover:text-white"
                 }`}
               >
                 {l === "TH" ? "ไทย" : "Eng"}
@@ -278,11 +278,11 @@ const SandboxPage = () => {
 
         {/* Typing Area Card */}
         <div
-          className="bg-stone-900 rounded-3xl p-6 md:p-12 shadow-2xl border border-stone-800 relative flex-grow max-h-[600px] flex flex-col z-10"
+          className="bg-white dark:bg-stone-900 rounded-3xl p-6 md:p-12 shadow-xl dark:shadow-2xl border border-gray-200 dark:border-stone-800 relative flex-grow max-h-[600px] flex flex-col z-10 transition-colors duration-300"
           onClick={() => inputRef.current?.focus()}
         >
           {/* Progress Bar */}
-          <div className="w-full h-1.5 bg-stone-800 rounded-full mb-8 overflow-hidden relative">
+          <div className="w-full h-1.5 bg-gray-200 dark:bg-stone-800 rounded-full mb-8 overflow-hidden relative">
             <div
               className="absolute top-0 left-0 h-full bg-gradient-to-r from-orange-600 via-orange-500 to-yellow-400 transition-all duration-200 ease-out shadow-[0_0_10px_rgba(249,115,22,0.6)]"
               style={{ width: `${Math.min(progressPercent, 100)}%` }}
@@ -292,13 +292,13 @@ const SandboxPage = () => {
           {/* Stats Header */}
           <div className="flex justify-between items-center mb-4 relative z-10">
             <div className="flex gap-6 items-baseline">
-              <div className="text-stone-400 text-sm">
+              <div className="text-gray-500 dark:text-stone-400 text-sm">
                 Mode:{" "}
-                <span className="text-orange-400 font-bold">Speed Test</span>
+                <span className="text-orange-600 dark:text-orange-400 font-bold">Speed Test</span>
               </div>
-              <div className="text-stone-400 text-sm">
+              <div className="text-gray-500 dark:text-stone-400 text-sm">
                 Words:{" "}
-                <span className="text-white font-bold">
+                <span className="text-gray-900 dark:text-white font-bold">
                   {wordCount} / {TOTAL_WORDS}
                 </span>
               </div>
@@ -308,7 +308,7 @@ const SandboxPage = () => {
                 e.stopPropagation();
                 startNewGame(lang);
               }}
-              className="p-2 hover:bg-stone-800 rounded-lg text-stone-400 hover:text-orange-300 transition-colors group"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-stone-800 rounded-lg text-gray-400 dark:text-stone-400 hover:text-orange-500 dark:hover:text-orange-300 transition-colors group"
             >
               <RefreshCw
                 size={20}
@@ -327,19 +327,19 @@ const SandboxPage = () => {
             }}
           >
             {targetText.split("").map((char, index) => {
-              let colorClass = "text-stone-600";
+              let colorClass = "text-gray-400 dark:text-stone-600";
               let borderClass = "";
               let extraClass = "";
 
               if (index < userInput.length) {
                 if (userInput[index] === char) {
-                  colorClass = "text-stone-100";
+                  colorClass = "text-gray-900 dark:text-stone-100";
                 } else {
-                  colorClass = "text-red-500 bg-red-500/10 rounded";
+                  colorClass = "text-red-500 bg-red-100 dark:bg-red-500/10 rounded";
                 }
               } else if (index === userInput.length) {
-                colorClass = "text-orange-400";
-                borderClass = "border-b-2 border-orange-400";
+                colorClass = "text-orange-600 dark:text-orange-400";
+                borderClass = "border-b-2 border-orange-500 dark:border-orange-400";
                 extraClass = "animate-pulse";
               }
 
@@ -378,7 +378,7 @@ const SandboxPage = () => {
             />
           </div>
 
-          <div className="mt-8 pt-4 border-t border-stone-800 flex justify-center text-stone-500 text-sm">
+          <div className="mt-8 pt-4 border-t border-gray-200 dark:border-stone-800 flex justify-center text-gray-500 dark:text-stone-500 text-sm">
             กดปุ่มใดก็ได้เพื่อเริ่มพิมพ์ทดสอบความเร็ว
           </div>
         </div>

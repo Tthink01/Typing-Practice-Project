@@ -3,13 +3,14 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import axios from 'axios' // ✅ 1. เพิ่มบรรทัดนี้
+import { ThemeProvider } from './context/ThemeContext.jsx'
 
 // ==========================================
 // 🔥 สูตรโกง: เปลี่ยน URL อัตโนมัติ (Global Fix)
 // ==========================================
 
 // ดึงค่า URL จาก Environment Variable ของ Render
-const PRODUCTION_URL = import.meta.env.VITE_API_URL; 
+const PRODUCTION_URL = import.meta.env.VITE_API_URL;
 
 // ตรวจสอบว่ามีค่า URL ของ Render ไหม (ถ้ามีแปลว่าอยู่บน Cloud)
 if (PRODUCTION_URL) {
@@ -32,6 +33,8 @@ if (PRODUCTION_URL) {
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <App />
+    <ThemeProvider>
+      <App />
+    </ThemeProvider>
   </StrictMode>,
 )

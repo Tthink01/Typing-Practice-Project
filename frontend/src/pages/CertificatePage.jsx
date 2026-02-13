@@ -115,25 +115,25 @@ const CertificatePage = () => {
   const currentProgress = progressData[selectedType];
 
   return (
-    <div className="min-h-auto bg-stone-950 flex flex-col items-center py-8 px-4 font-sans">
+    <div className="min-h-auto bg-gray-50 dark:bg-stone-950 flex flex-col items-center py-8 px-4 font-sans transition-colors duration-300">
       
       <div className="w-full max-w-4xl flex justify-between items-center mb-6">
-        <button onClick={() => navigate("/")} className="text-stone-400 hover:text-white flex gap-2 items-center transition-colors">
+        <button onClick={() => navigate("/")} className="text-gray-500 dark:text-stone-400 hover:text-gray-900 dark:hover:text-white flex gap-2 items-center transition-colors">
           <Home size={20} /> กลับเมนูหลัก
         </button>
       </div>
 
-      <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-200 mb-6">
+      <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-400 dark:from-orange-400 dark:to-amber-200 mb-6">
          เลือกใบประกาศนียบัตร
       </h2>
 
-      <div className="flex gap-4 mb-8 bg-stone-900 p-2 rounded-full border border-stone-800">
+      <div className="flex gap-4 mb-8 bg-white dark:bg-stone-900 p-2 rounded-full border border-gray-200 dark:border-stone-800 shadow-sm transition-colors">
         <button
           onClick={() => setSelectedType("basic")}
           className={`px-6 py-2 rounded-full font-bold transition-all flex items-center gap-2 ${
             selectedType === "basic" 
               ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30" 
-              : "text-stone-500 hover:text-stone-300"
+              : "text-gray-500 dark:text-stone-500 hover:text-gray-700 dark:hover:text-stone-300"
           }`}
         >
           ระดับพื้นฐาน {unlockStatus.basic && <CheckCircle size={16} />}
@@ -143,8 +143,8 @@ const CertificatePage = () => {
           onClick={() => setSelectedType("pro")}
           className={`px-6 py-2 rounded-full font-bold transition-all flex items-center gap-2 ${
             selectedType === "pro" 
-              ? "bg-amber-500 text-black shadow-lg shadow-amber-500/30" 
-              : "text-stone-500 hover:text-stone-300"
+              ? "bg-amber-500 text-white dark:text-black shadow-lg shadow-amber-500/30" 
+              : "text-gray-500 dark:text-stone-500 hover:text-gray-700 dark:hover:text-stone-300"
           }`}
         >
           ระดับใช้ได้ {unlockStatus.pro && <CheckCircle size={16} />}
@@ -152,20 +152,20 @@ const CertificatePage = () => {
       </div>
 
       {isCurrentLocked ? (
-        <div className="flex flex-col items-center justify-center bg-stone-900/50 p-12 rounded-3xl border border-stone-800 backdrop-blur-sm animate-fade-in text-center">
-             <div className="bg-stone-800 p-4 rounded-full mb-4 inline-block">
-                <Lock size={48} className="text-stone-500" />
+        <div className="flex flex-col items-center justify-center bg-white/50 dark:bg-stone-900/50 p-12 rounded-3xl border border-gray-200 dark:border-stone-800 backdrop-blur-sm animate-fade-in text-center transition-colors duration-300">
+             <div className="bg-gray-100 dark:bg-stone-800 p-4 rounded-full mb-4 inline-block">
+                <Lock size={48} className="text-gray-400 dark:text-stone-500" />
              </div>
-             <h3 className="text-2xl font-bold text-stone-300 mb-2">
+             <h3 className="text-2xl font-bold text-gray-800 dark:text-stone-300 mb-2">
                  {selectedType === "basic" ? "ระดับพื้นฐาน" : "ระดับใช้ได้"} ยังไม่ปลดล็อค
              </h3>
-             <p className="text-stone-500 mb-6">
+             <p className="text-gray-600 dark:text-stone-500 mb-6">
                  คุณต้องผ่านด่านทั้งหมดของระดับนี้ก่อน <br/>
                  <span className="text-orange-500 font-bold">
                     ความคืบหน้า: {currentProgress.completed} / {currentProgress.total} ด่าน
                  </span>
              </p>
-             <button onClick={() => navigate("/")} className="px-6 py-2 bg-stone-800 hover:bg-stone-700 text-white rounded-lg transition-colors">
+             <button onClick={() => navigate("/")} className="px-6 py-2 bg-gray-200 dark:bg-stone-800 hover:bg-gray-300 dark:hover:bg-stone-700 text-gray-800 dark:text-white rounded-lg transition-colors">
                  กลับไปฝึกต่อ
              </button>
         </div>

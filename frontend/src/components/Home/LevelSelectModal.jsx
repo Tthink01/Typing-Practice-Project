@@ -1,7 +1,8 @@
 import React from "react";
 import { X } from "lucide-react";
-import AnimatedLevelButton from "./Shared/LevelSelect/AnimatedLevelButton"; // ✅ Import มา
-import LevelButton from "./Shared/LevelSelect/LevelButton";
+import AnimatedLevelButton from "../Shared/LevelSelect/AnimatedLevelButton"; // ✅ Updated Import
+import LevelButton from "../Shared/LevelSelect/LevelButton"; // Updated Import
+
 const LevelSelectModal = ({
   isOpen,
   onClose,

@@ -11,8 +11,8 @@ import {
 } from "lucide-react";
 
 import axios from "axios";
-import { EXERCISES_DATA } from "../data/exercises";
-import ThemeToggle from "./ThemeToggle";
+import { EXERCISES_DATA } from "../../data/exercises";
+import ThemeToggle from "../Shared/ThemeToggle"; // Updated import
 
 const ActiveDot = () => (
   <span className="absolute -bottom-3 w-1.5 h-1.5 bg-orange-500 rounded-full shadow-[0_0_5px_rgba(249,115,22,0.8)]"></span>

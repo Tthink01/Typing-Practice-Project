@@ -54,7 +54,7 @@ const TypingGame = ({
       />
 
       {/* Main Container */}
-      <div className={`${fontSize} leading-[3] font-mono tracking-wide flex flex-wrap gap-y-6 text-stone-600 select-none`}>
+      <div className={`${fontSize} leading-[3] font-mono tracking-wide flex flex-wrap gap-y-6 text-gray-500 dark:text-stone-600 select-none transition-colors duration-300`}>
         
         {processedWords.map((word, wIndex) => {
           const chars = word.split('');
@@ -72,16 +72,16 @@ const TypingGame = ({
                 const isActive = currentIndex === userInput.length && isGameActive;
                 
                 // Color Logic
-                let textColor = "text-stone-700 opacity-30";
-                if (isCorrect) textColor = "text-stone-100 opacity-100";
-                if (isWrong) textColor = "text-red-400 opacity-100";
-                if (isActive) textColor = "text-orange-400 opacity-100";
+                let textColor = "text-gray-400 dark:text-stone-700 opacity-40 dark:opacity-30";
+                if (isCorrect) textColor = "text-gray-900 dark:text-stone-100 opacity-100 font-medium";
+                if (isWrong) textColor = "text-red-500 dark:text-red-400 opacity-100";
+                if (isActive) textColor = "text-orange-600 dark:text-orange-400 opacity-100 font-bold scale-110";
 
                 // Background Logic
                 const bgClass = isActive 
-                  ? "bg-stone-800 rounded-md shadow-[0_0_15px_rgba(251,146,60,0.3)]" 
+                  ? "bg-orange-100 dark:bg-stone-800 rounded-md shadow-[0_0_15px_rgba(251,146,60,0.3)] ring-1 ring-orange-500/30 dark:ring-0" 
                   : isWrong 
-                    ? "bg-red-900/40 rounded-sm" 
+                    ? "bg-red-100 dark:bg-red-900/40 rounded-sm" 
                     : "";
 
                 return (
@@ -115,7 +115,7 @@ const TypingGame = ({
                 );
               })}
 
-              {/* --- 2. Spacebar Logic (แก้ไขตรงนี้) --- */}
+              {/* --- 2. Spacebar Logic --- */}
               {!isLastWord && (() => {
                 const spaceIndex = globalCharIndex++;
                 const isActive = spaceIndex === userInput.length && isGameActive;
@@ -128,13 +128,13 @@ const TypingGame = ({
                     className={`relative inline-block mx-[2px] rounded-sm align-middle transition-all duration-100
                       ${isActive ? "w-[1.5em]" : "w-[0.8em]"} 
                       ${isWrong ? "bg-red-500/50" : ""}
-                      ${isActive ? "bg-stone-800 ring-2 ring-orange-500 shadow-[0_0_15px_rgba(251,146,60,0.4)]" : ""}
+                      ${isActive ? "bg-orange-100 dark:bg-stone-800 ring-2 ring-orange-500 shadow-[0_0_15px_rgba(251,146,60,0.4)]" : ""}
                     `}
                   >
                     {/* ถ้าถึงตา Spacebar ให้โชว์คำว่า Space เด้งๆ */}
                     {isActive && (
                       <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 animate-bounce flex flex-col items-center min-w-[50px] z-30">
-                        <span className="text-[10px] font-bold text-orange-400 bg-stone-900/80 px-2 py-0.5 rounded-full border border-orange-500/50 mb-1">
+                        <span className="text-[10px] font-bold text-orange-500 bg-white dark:bg-stone-900/80 px-2 py-0.5 rounded-full border border-orange-500/50 mb-1 shadow-sm">
                           Space
                         </span>
                         <ArrowDown size={16} className="text-orange-500" />
@@ -143,7 +143,7 @@ const TypingGame = ({
 
                     {/* สัญลักษณ์ ␣ จางๆ ตรงกลางปุ่ม */}
                     <span className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xs font-bold
-                      ${isActive ? "text-orange-500 opacity-100" : "text-stone-600 opacity-0"}
+                      ${isActive ? "text-orange-500 opacity-100" : "text-gray-300 dark:text-stone-600 opacity-0"}
                     `}>
                       ␣
                     </span>
@@ -158,7 +158,7 @@ const TypingGame = ({
       </div>
 
       {!isGameActive && userInput.length === 0 && (
-         <div className="mt-12 text-center text-stone-500 animate-pulse font-light">
+         <div className="mt-12 text-center text-gray-400 dark:text-stone-500 animate-pulse font-light">
             เริ่มพิมพ์ได้เลย...
          </div>
       )}
