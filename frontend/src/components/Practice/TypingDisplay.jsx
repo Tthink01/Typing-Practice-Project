@@ -7,7 +7,7 @@ const TypingDisplay = ({ targetText, userInput, inputRef, handleInputChange }) =
       onClick={() => inputRef.current?.focus()}
     >
       <div>
-        {targetText.split("").map((char, index) => {
+        {targetText.normalize("NFC").split("").map((char, index) => {
           let colorClass = "text-gray-400 dark:text-stone-600";
           let borderClass = "";
           let extraClass = "";
@@ -24,7 +24,7 @@ const TypingDisplay = ({ targetText, userInput, inputRef, handleInputChange }) =
             extraClass = "animate-pulse";
           }
 
-          const isCombining = /[\u0E31\u0E34-\u0E3A\u0E47-\u0E4E]/.test(char);
+          const isCombining = /[\u0E31\u0E33\u0E34-\u0E3A\u0E47-\u0E4E]/.test(char);
           const finalChar = (index === userInput.length && isCombining) 
             ? <><span className="opacity-50 font-sans">◌</span>{char}</> 
             : char;

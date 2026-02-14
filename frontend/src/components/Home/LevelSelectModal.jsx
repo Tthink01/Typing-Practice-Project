@@ -36,8 +36,7 @@ const LevelSelectModal = ({
         shadow: "shadow-[0_0_15px_rgba(251,191,36,0.4)]",
       };
 
-  console.log("Modal Type:", type);
-  console.log("Is Basic?", isBasic);
+  
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fade-in font-sans">

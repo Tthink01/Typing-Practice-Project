@@ -89,6 +89,20 @@ const CertificatePage = () => {
         backgroundColor: "#ffffff",
         useCORS: true, // สำคัญมากสำหรับการโหลดรูป
         logging: true, // ช่วยดู error ใน console F12
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: 800, // Force canvas window width to match container width
+        windowHeight: 600, // Force canvas window height to match container height
+        x: 0,
+        y: 0,
+        width: 800,
+        height: 600,
+        onclone: (documentClone) => {
+            const element = documentClone.querySelector(".certificate-container");
+            if (element) {
+                element.style.transform = "none"; // Reset any transforms that might shift layout
+            }
+        }
       });
 
       const image = canvas.toDataURL("image/png");
@@ -174,7 +188,7 @@ const CertificatePage = () => {
             <div className="overflow-x-auto w-full flex justify-center mb-8 animate-slide-up">
                 <div
                     ref={certificateRef}
-                    className="relative w-[800px] h-[600px] shadow-2xl flex-shrink-0 bg-white"
+                    className="certificate-container relative w-[800px] h-[600px] shadow-2xl flex-shrink-0 bg-white"
                 >
                     <img 
                         src={selectedType === "basic" ? certificateBasicBg : certificateProBg} 
@@ -188,7 +202,9 @@ const CertificatePage = () => {
                         style={{ 
                             fontFamily: "'itim', cursive",
                             fontSize: "3rem",
-                            textShadow: "2px 2px 4px rgba(0,0,0,0.1)"
+                            lineHeight: "1.2",
+                            textShadow: "2px 2px 4px rgba(0,0,0,0.1)",
+                            whiteSpace: "nowrap"
                         }}
                         >
                         {userName}

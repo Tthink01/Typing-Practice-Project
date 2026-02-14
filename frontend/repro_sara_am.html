@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<style>
+  body { font-family: monospace; font-size: 40px; }
+  .char { position: relative; display: inline-block; min-width: 1px; border: 1px solid #ccc; }
+  .combining { color: red; }
+</style>
+</head>
+<body>
+<h1>Test Sara Am</h1>
+<div>
+  Normal: ลำ <br>
+  Split: 
+  <span class="char">ล</span>
+  <span class="char">ำ</span>
+</div>
+<div>
+  With Placeholder Logic (Current): 
+  <span class="char">ล</span>
+  <!-- logic: index === userInput.length && isCombining -->
+  <span class="char combining"><span style="opacity:0.5">◌</span>ำ</span>
+</div>
+<div>
+  Without Placeholder (Proposed):
+  <span class="char">ล</span>
+  <span class="char">ำ</span>
+</div>
+</body>
+</html>

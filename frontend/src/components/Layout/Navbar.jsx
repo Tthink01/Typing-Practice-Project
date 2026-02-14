@@ -87,14 +87,14 @@ const Navbar = () => {
         ).length;
         const isUnlocked = passedBasicCount >= totalBasic && totalBasic > 0;
 
-        console.log(`🏆 Certificate Unlock Check:
-          - Total Basic: ${totalBasic}
-          - Passed Basic: ${passedBasicCount}
-          - Unlocked: ${isUnlocked}`);
+        // console.log(`🏆 Certificate Unlock Check:
+        //   - Total Basic: ${totalBasic}
+        //   - Passed Basic: ${passedBasicCount}
+        //   - Unlocked: ${isUnlocked}`);
 
         setIsCertificateUnlocked(isUnlocked);
       } catch (error) {
-        console.error("❌ Error fetching progress:", error);
+        // console.error("❌ Error fetching progress:", error);
         setIsCertificateUnlocked(false);
       }
     };

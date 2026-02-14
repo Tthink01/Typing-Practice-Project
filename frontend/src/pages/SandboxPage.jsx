@@ -5,7 +5,7 @@ import axios from "axios";
 
 
 // Components
-import Navbar from "../components/Layout/Navbar";
+
 
 // New Components (Shared)
 import Floater from "../components/Shared/Floater";
@@ -159,7 +159,7 @@ const SandboxPage = () => {
           lastKeyTime.current = now;
         }
 
-        setUserInput(val);
+        setUserInput(val.normalize("NFC"));
 
         if (val.length === targetText.length) {
           setIsGameActive(false);
@@ -348,7 +348,7 @@ const SandboxPage = () => {
                 extraClass = "animate-pulse";
               }
 
-              const isCombining = /[\u0E31\u0E34-\u0E3A\u0E47-\u0E4E]/.test(
+              const isCombining = /[\u0E31\u0E33\u0E34-\u0E3A\u0E47-\u0E4E]/.test(
                 char,
               );
               const finalChar =
