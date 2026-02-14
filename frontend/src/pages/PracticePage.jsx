@@ -103,7 +103,7 @@ const GameContent = () => {
     >
       {/* Background Effect */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-        <div className="absolute top-[-10%] right-[-5%] w-[40%] h-[40%] bg-orange-400/20 dark:bg-orange-900/10 rounded-full blur-[100px] transition-colors duration-300"></div>
+        <div className="absolute top-[-20%] right-[-10%] w-[50%] h-[50%] bg-orange-400/20 dark:bg-orange-600/10 rounded-full blur-[120px] transition-colors duration-300"></div>
       </div>
 
       <div className="max-w-4xl mx-auto w-full flex-grow flex flex-col mt-8 px-4 relative z-10">
@@ -117,10 +117,10 @@ const GameContent = () => {
           onRetry={handleRestart}
         />
 
-        <div className="bg-white dark:bg-stone-900 rounded-[2.5rem] p-8 md:p-12 shadow-xl dark:shadow-2xl border border-gray-200 dark:border-stone-800 relative flex flex-col min-h-[500px] transition-all duration-300">
+        <div className="bg-white dark:bg-stone-900 rounded-3xl p-8 md:p-12 shadow-xl dark:shadow-2xl border border-gray-200 dark:border-stone-800 relative flex flex-col min-h-[500px] transition-all duration-300">
           <div className="w-full h-1.5 bg-gray-200 dark:bg-stone-800 rounded-full mb-8 overflow-hidden relative">
             <div
-              className="absolute top-0 left-0 h-full bg-gradient-to-r from-orange-500 to-yellow-400 transition-all duration-200"
+              className="absolute top-0 left-0 h-full bg-gradient-to-r from-orange-600 via-orange-500 to-yellow-400 transition-all duration-200"
               style={{ width: `${Math.min(progressPercent, 100)}%` }}
             />
           </div>
@@ -130,7 +130,7 @@ const GameContent = () => {
             inputRef={inputRef}
             handleInputChange={handleInputChange}
           />
-          <div className="mt-12 text-center text-gray-500 dark:text-stone-600 text-sm">
+          <div className="mt-12 text-center text-gray-400 dark:text-stone-500 text-sm">
             พิมพ์ให้เร็วและแม่นยำ (Time Limit: {TIME_LIMIT}s)
           </div>
         </div>

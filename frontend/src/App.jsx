@@ -47,8 +47,8 @@ const AnimatedRoutes = () => {
   }
 
   return (
-    <div className="relative w-full min-h-screen overflow-hidden bg-[#0a0a0a]">
-      <AnimatePresence custom={navState.direction} mode="popLayout">
+    <div className="relative w-full min-h-screen overflow-hidden bg-gray-50 dark:bg-[#0a0a0a] transition-colors duration-300">
+      <AnimatePresence custom={navState.direction} mode="wait">
         <Routes location={location} key={location.pathname}>
           
           <Route 

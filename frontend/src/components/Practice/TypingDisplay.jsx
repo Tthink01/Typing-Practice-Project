@@ -8,19 +8,19 @@ const TypingDisplay = ({ targetText, userInput, inputRef, handleInputChange }) =
     >
       <div>
         {targetText.split("").map((char, index) => {
-          let colorClass = "text-stone-600";
+          let colorClass = "text-gray-400 dark:text-stone-600";
           let borderClass = "";
           let extraClass = "";
 
           if (index < userInput.length) {
             if (userInput[index] === char) {
-              colorClass = "text-stone-100";
+              colorClass = "text-gray-900 dark:text-stone-100";
             } else {
-              colorClass = "text-red-500 bg-red-500/10 rounded";
+              colorClass = "text-red-500 bg-red-100 dark:bg-red-500/10 rounded";
             }
           } else if (index === userInput.length) {
-            colorClass = "text-orange-400";
-            borderClass = "border-b-2 border-orange-400";
+            colorClass = "text-orange-600 dark:text-orange-400";
+            borderClass = "border-b-2 border-orange-500 dark:border-orange-400";
             extraClass = "animate-pulse";
           }
 

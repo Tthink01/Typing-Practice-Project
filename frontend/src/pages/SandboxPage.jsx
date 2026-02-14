@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, RefreshCw, Globe } from "lucide-react";
 import axios from "axios";
-import PageTransition from "../components/Shared/PageTransition"; // นำเข้า
+
 
 // Components
 import Navbar from "../components/Layout/Navbar";
@@ -21,9 +21,14 @@ const SandboxPage = () => {
   const [lang, setLang] = useState("TH");
   const [userInput, setUserInput] = useState("");
   const [isGameActive, setIsGameActive] = useState(true);
-  const [targetText, setTargetText] = useState(() =>
-    getRandomText("TH", TOTAL_WORDS),
-  );
+  const [targetText, setTargetText] = useState(() => {
+    try {
+      return getRandomText("TH", TOTAL_WORDS) || "";
+    } catch (e) {
+      console.error("Error getting random text:", e);
+      return "";
+    }
+  });
 
   // --- Stats & Logic States ---
   const [, setStartTime] = useState(null);
